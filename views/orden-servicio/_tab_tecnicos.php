@@ -21,8 +21,8 @@ use yii\helpers\Html;
         <tbody>
             <?php foreach ($model->asignaciones as $asignacion): ?>
                 <tr>
-                    <td><?= Html::encode($asignacion->tecnico->nombre ?? 'N/A') ?></td>
-                    <td><?= Html::encode($asignacion->tecnico->especialidad->nombre ?? 'N/A') ?></td>
+                    <td><?= Html::encode($asignacion->tecnico?->nombre ?? 'N/A') ?></td>
+                    <td><?= Html::encode($asignacion->tecnico?->especialidad?->nombre ?? 'N/A') ?></td>
                     <td><?= $asignacion->asignado_at ? date('d/m/Y H:i', $asignacion->asignado_at) : 'N/A' ?></td>
                     <td class="text-end">
                         <?= Html::a('<i class="bi bi-x"></i>', '#', ['class' => 'btn btn-sm btn-danger']) ?>

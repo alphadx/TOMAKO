@@ -61,11 +61,11 @@ $this->params['breadcrumbs'][] = 'Cerrar';
                     <table class="table table-sm">
                         <tr>
                             <td><strong>Cliente:</strong></td>
-                            <td><?= htmlspecialchars($model->cliente->nombre ?? 'N/A') ?></td>
+                            <td><?= htmlspecialchars($model->cliente?->nombre ?? 'N/A') ?></td>
                         </tr>
                         <tr>
                             <td><strong>Vehículo:</strong></td>
-                            <td><?= htmlspecialchars($model->vehiculo->patente ?? 'N/A') ?></td>
+                            <td><?= htmlspecialchars($model->vehiculo?->patente ?? 'N/A') ?></td>
                         </tr>
                         <tr>
                             <td><strong>estado:</strong></td>

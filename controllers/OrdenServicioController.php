@@ -13,6 +13,7 @@ use yii\web\UploadedFile;
 use app\models\OrdenServicio;
 use app\models\search\OrdenServicioSearch;
 use app\models\OrdenServicioArchivo;
+use app\models\ChecklistItem;
 use app\models\Seguimiento;
 use app\models\Tecnico;
 use app\components\services\OrdenServicioService;
@@ -767,7 +768,7 @@ class OrdenServicioController extends Controller
             // Agrupar por servicio
             $detalles = $orden->detalles;
             foreach ($detalles as $detalle) {
-                $servicioNombre = $detalle->servicio->nombre ?? 'Sin servicio';
+                    $servicioNombre = $detalle->servicio?->nombre ?? 'Sin servicio';
                 if (!isset($datosPorServicio[$servicioNombre])) {
                     $datosPorServicio[$servicioNombre] = [
                         'total_ordenes' => 0,

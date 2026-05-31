@@ -35,12 +35,12 @@ $this->params['breadcrumbs'][] = 'Checklist';
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Cliente:</strong> <?= Html::encode($model->cliente->nombre ?? 'N/A') ?></p>
-                    <p><strong>Vehículo:</strong> <?= Html::encode($model->vehiculo->marca_modelo ?? 'N/A') ?></p>
+                    <p><strong>Cliente:</strong> <?= Html::encode($model->cliente?->nombre ?? 'N/A') ?></p>
+                    <p><strong>Vehículo:</strong> <?= Html::encode($model->vehiculo?->marca_modelo ?? 'N/A') ?></p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Patente:</strong> <?= Html::encode($model->vehiculo->patente ?? 'N/A') ?></p>
-                    <p><strong>Kilometraje:</strong> <?= number_format((float)($model->vehiculo->kilometraje ?? 0), 0, ',', '.') ?> km</p>
+                    <p><strong>Patente:</strong> <?= Html::encode($model->vehiculo?->patente ?? 'N/A') ?></p>
+                    <p><strong>Kilometraje:</strong> <?= number_format((float)($model->vehiculo?->kilometraje ?? 0), 0, ',', '.') ?> km</p>
                 </div>
             </div>
         </div>

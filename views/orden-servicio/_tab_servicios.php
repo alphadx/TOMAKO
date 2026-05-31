@@ -19,7 +19,7 @@ use yii\helpers\Html;
     <tbody>
         <?php foreach ($model->detalles as $detalle): ?>
             <tr>
-                <td><?= Html::encode($detalle->servicio->nombre ?? 'N/A') ?></td>
+                <td><?= Html::encode($detalle->servicio?->nombre ?? 'N/A') ?></td>
                 <td class="text-end"><?= $detalle->cantidad ?></td>
                 <td class="text-end"><?= number_format((float)$detalle->precio_unitario, 0, ',', '.') ?></td>
                 <td class="text-end"><strong><?= number_format((float)$detalle->subtotal, 0, ',', '.') ?></strong></td>

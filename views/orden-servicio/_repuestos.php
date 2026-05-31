@@ -79,9 +79,9 @@ $repuestosDisponibles = InventoryItem::find()
                         ?>
                             <tr>
                                 <td>
-                                    <strong><?= Html::encode($ordenRepuesto->repuesto->nombre) ?></strong>
+                                    <strong><?= Html::encode($ordenRepuesto->repuesto?->nombre ?? 'N/A') ?></strong>
                                     <br>
-                                    <small class="text-muted">SKU: <?= Html::encode($ordenRepuesto->repuesto->sku) ?></small>
+                                    <small class="text-muted">SKU: <?= Html::encode($ordenRepuesto->repuesto?->sku ?? 'N/A') ?></small>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -92,7 +92,7 @@ $repuestosDisponibles = InventoryItem::find()
                                                min="1"
                                                data-id="<?= $ordenRepuesto->id ?>"
                                                data-action="actualizar-cantidad">
-                                        <span class="badge bg-secondary"><?= $ordenRepuesto->repuesto->unidad ?></span>
+                                        <span class="badge bg-secondary"><?= $ordenRepuesto->repuesto?->unidad ?? '' ?></span>
                                     </div>
                                 </td>
                                 <td>$<?= number_format((float)$ordenRepuesto->precio_unitario_aplicado, 0, ',', '.') ?></td>

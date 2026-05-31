@@ -37,7 +37,7 @@ class OrdenServicioController extends Controller
 {
     private OrdenServicioService $service;
 
-    public function __construct($id, $module, OrdenServicioService $service = null, array $config = [])
+    public function __construct($id, $module, ?OrdenServicioService $service = null, array $config = [])
     {
         parent::__construct($id, $module, $config);
         $this->service = $service ?? new OrdenServicioService();

@@ -552,7 +552,6 @@ Para incidencias técnicas o consultas comerciales:
 
 - **Issues**: Reportar bugs en GitHub Issues
 - **Documentación**: Ver `/docs` para guías detalladas
-- **Email**: soporte@tomako.cl (ejemplo)
 
 ---
 

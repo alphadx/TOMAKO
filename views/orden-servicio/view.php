@@ -19,8 +19,8 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="mb-3">
         <h1><?= Html::encode($this->title) ?></h1>
         <p>
-            <?= Html::raw($model->getEstadoBadgeClass()) ?>
-            <?= Html::raw($model->getPrioridadBadge()) ?>
+            <?= $model->getEstadoBadgeClass() ?>
+            <?= $model->getPrioridadBadge() ?>
         </p>
     </div>
 

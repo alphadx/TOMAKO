@@ -24,11 +24,11 @@ use app\models\OrdenServicio;
             </tr>
             <tr>
                 <th>Estado:</th>
-                <td><?= Html::raw($model->getEstadoBadgeClass()) ?></td>
+                <td><?= $model->getEstadoBadgeClass() ?></td>
             </tr>
             <tr>
                 <th>Prioridad:</th>
-                <td><?= Html::raw($model->getPrioridadBadge()) ?></td>
+                <td><?= $model->getPrioridadBadge() ?></td>
             </tr>
         </table>
     </div>

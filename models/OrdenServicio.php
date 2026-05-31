@@ -34,6 +34,12 @@ use app\components\behaviors\AuditBehavior;
  */
 class OrdenServicio extends ActiveRecord
 {
+    /**
+     * @var int|null KM del vehículo al momento de crear la orden.
+     * No se persiste directamente en esta tabla; se sincroniza con Vehiculo.
+     */
+    public ?int $ultimo_km = null;
+
     /** @var string[] */
     public const ESTADOS = [
         'abierto',
@@ -92,6 +98,8 @@ class OrdenServicio extends ActiveRecord
             ['total',     'default', 'value' => 0.00],
             ['notas_generales', 'string'],
             ['codigo',    'string', 'max' => 20],
+            ['ultimo_km', 'integer', 'min' => 0],
+            ['ultimo_km', 'default', 'value' => null],
         ];
     }
 
@@ -107,6 +115,7 @@ class OrdenServicio extends ActiveRecord
             'prioridad'       => 'Prioridad',
             'total'           => 'Total',
             'notas_generales' => 'Notas Generales',
+            'ultimo_km'       => 'Último KM',
             'opened_at'       => 'Abierta',
             'closed_at'       => 'Cerrada',
             'created_at'      => 'Creado',

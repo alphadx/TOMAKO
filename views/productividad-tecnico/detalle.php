@@ -27,7 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </p>
                     <p><strong>Email:</strong> <?= Html::encode($tecnico->email ?? 'N/A') ?></p>
                     <p><strong>Teléfono:</strong> <?= Html::encode($tecnico->telefono ?? 'N/A') ?></p>
-                    <p><strong>Costo Hora:</strong> $<?= number_format($tecnico->costo_hora, 0, ',', '.') ?></p>
+                    <p><strong>Costo Hora:</strong> $<?= number_format((float)$tecnico->costo_hora, 0, ',', '.') ?></p>
                 </div>
             </div>
         </div>
@@ -87,7 +87,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <td><?= $orden->closed_at ? date('d/m/Y H:i', $orden->closed_at) : '-' ?></td>
                                         <td><?= $orden->cliente ? Html::encode($orden->cliente->getFullName()) : 'N/A' ?></td>
                                         <td class="text-center"><?= $horasTrabajadas ?>h</td>
-                                        <td class="text-right">$<?= number_format($totalOrden, 0, ',', '.') ?></td>
+<td class="text-right">$<?= number_format((float)$totalOrden, 0, ',', '.') ?></td>
                                         <td><span class="badge badge-info"><?= str_replace('_', ' ', ucfirst($orden->estado)) ?></span></td>
                                         <td>
                                             <?= Html::a('<i class="fas fa-eye"></i>', ['/orden-servicio/view', 'id' => $orden->id], [
@@ -102,7 +102,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <tr class="table-active">
                                     <th colspan="4" class="text-right">Totales del Período:</th>
                                     <th class="text-center"><?= round($totalHoras, 2) ?>h</th>
-                                    <th class="text-right">$<?= number_format($totalIngresos, 0, ',', '.') ?></th>
+<th class="text-right">$<?= number_format((float)$totalIngresos, 0, ',', '.') ?></th>
                                     <th colspan="2"></th>
                                 </tr>
                             </tfoot>

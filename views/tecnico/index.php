@@ -68,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'telefono',
             [
                 'label' => 'Costo/Hora',
-                'value' => fn($m) => $m->costo_hora ? '$ ' . number_format($m->costo_hora, 0, ',', '.') : '—',
+'value' => fn($m) => $m->costo_hora ? '$ ' . number_format((float)$m->costo_hora, 0, ',', '.') : '—',
             ],
             [
                 'label'  => 'Estado',

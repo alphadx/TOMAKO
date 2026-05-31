@@ -74,7 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'fecha_entrega_real:date',
                     [
                         'attribute' => 'total_monto',
-                        'value' => '$' . number_format($model->total_monto, 0, ',', '.'),
+'value' => '$' . number_format((float)$model->total_monto, 0, ',', '.'),
                     ],
                     'observaciones:ntext',
                     [
@@ -127,8 +127,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </span>
                             </td>
                             <td><?= $item->getCantidadPendiente() ?></td>
-                            <td>$<?= number_format($item->precio_unitario, 0, ',', '.') ?></td>
-                            <td>$<?= number_format($item->subtotal, 0, ',', '.') ?></td>
+                            <td>$<?= number_format((float)$item->precio_unitario, 0, ',', '.') ?></td>
+                            <td>$<?= number_format((float)$item->subtotal, 0, ',', '.') ?></td>
                             <td>
                                 <div class="progress" style="height: 20px;">
                                     <div class="progress-bar bg-<?= $item->esRecibidoCompleto() ? 'success' : 'warning' ?>" 
@@ -155,7 +155,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tfoot>
                     <tr>
                         <th colspan="6" class="text-end">Total:</th>
-                        <th colspan="2"><strong>$<?= number_format($model->total_monto, 0, ',', '.') ?></strong></th>
+<th colspan="2"><strong>$<?= number_format((float)$model->total_monto, 0, ',', '.') ?></strong></th>
                     </tr>
                 </tfoot>
             </table>

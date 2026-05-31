@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-md-3">
             <div class="card text-center border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="fs-1 fw-bold text-success">$ <?= number_format($kpis['valor_total'], 0, ',', '.') ?></div>
+<div class="fs-1 fw-bold text-success">$ <?= number_format((float)($kpis['valor_total']), 0, ',', '.') ?></div>
                     <div class="text-muted small"><i class="bi bi-currency-dollar me-1"></i>Valor Inventario</div>
                 </div>
             </div>
@@ -117,7 +117,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'label'  => 'Precio',
-                'value'  => fn($m) => '$ ' . number_format($m->precio_unitario, 0, ',', '.'),
+'value'  => fn($m) => '$ ' . number_format((float)$m->precio_unitario, 0, ',', '.'),
             ],
             [
                 'label'  => 'Stock',

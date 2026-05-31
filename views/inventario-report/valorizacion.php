@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Valor Total Inventario</h5>
-                    <h3 class="mb-0">$<?= number_format($valorTotal, 0, ',', '.') ?></h3>
+                    <h3 class="mb-0">$<?= number_format((float)$valorTotal, 0, ',', '.') ?></h3>
                 </div>
             </div>
         </div>
@@ -85,10 +85,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <td><strong><?= Html::encode($categoria) ?></strong></td>
                             <td class="text-right"><?= $datos['items'] ?></td>
-                            <td class="text-right"><?= number_format($datos['cantidad'], 0, ',', '.') ?></td>
-                            <td class="text-right">$<?= number_format($datos['valor'], 0, ',', '.') ?></td>
+                            <td class="text-right"><?= number_format((int)$datos['cantidad'], 0, ',', '.') ?></td>
+                            <td class="text-right">$<?= number_format((float)$datos['valor'], 0, ',', '.') ?></td>
                             <td class="text-right">
-                                <?= $valorTotal > 0 ? number_format(($datos['valor'] / $valorTotal) * 100, 1) : 0 ?>%
+                                <?= $valorTotal > 0 ? number_format((float)(($datos['valor'] / $valorTotal) * 100), 1) : 0 ?>%
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -97,8 +97,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr class="table-active">
                         <th>Total General</th>
                         <th class="text-right"><?= count($valorPorCategoria) ?></th>
-                        <th class="text-right"><?= number_format($totalItems, 0, ',', '.') ?></th>
-                        <th class="text-right">$<?= number_format($valorTotal, 0, ',', '.') ?></th>
+                        <th class="text-right"><?= number_format((int)$totalItems, 0, ',', '.') ?></th>
+                        <th class="text-right">$<?= number_format((float)$valorTotal, 0, ',', '.') ?></th>
                         <th class="text-right">100%</th>
                     </tr>
                 </tfoot>
@@ -153,7 +153,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'valor_total',
                         'label' => 'Valor Total',
                         'value' => function($model) {
-                            return '$' . number_format($model['valor_total'], 0, ',', '.');
+                            return '$' . number_format((float)$model['valor_total'], 0, ',', '.');
                         },
                         'contentOptions' => ['class' => 'text-right font-weight-bold'],
                     ],

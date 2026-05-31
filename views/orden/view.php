@@ -77,7 +77,7 @@ foreach ($todos as $e) {
             <div class="card shadow-sm mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <strong><i class="bi bi-wrench me-1"></i>Servicios</strong>
-                    <span class="badge bg-success">Total: $ <?= number_format($model->total, 0, ',', '.') ?></span>
+                    <span class="badge bg-success">Total: $ <?= number_format((float)$model->total, 0, ',', '.') ?></span>
                 </div>
                 <?php if (empty($model->detalles)): ?>
                     <div class="card-body text-muted text-center">Sin servicios registrados.</div>
@@ -97,13 +97,13 @@ foreach ($todos as $e) {
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center"><?= $d->cantidad ?></td>
-                                    <td class="text-end">$ <?= number_format($d->precio_unitario, 0, ',', '.') ?></td>
-                                    <td class="text-end fw-bold">$ <?= number_format($d->subtotal, 0, ',', '.') ?></td>
+                                    <td class="text-end">$ <?= number_format((float)$d->precio_unitario, 0, ',', '.') ?></td>
+                                    <td class="text-end fw-bold">$ <?= number_format((float)$d->subtotal, 0, ',', '.') ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
                             <tfoot class="table-secondary">
-                                <tr><td colspan="3" class="text-end fw-bold">Total</td><td class="text-end fw-bold">$ <?= number_format($model->total, 0, ',', '.') ?></td></tr>
+<tr><td colspan="3" class="text-end fw-bold">Total</td><td class="text-end fw-bold">$ <?= number_format((float)$model->total, 0, ',', '.') ?></td></tr>
                             </tfoot>
                         </table>
                     </div>
@@ -147,12 +147,12 @@ foreach ($todos as $e) {
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Total pagado:</span>
-                        <strong class="text-success">$ <?= number_format($totalPagado, 0, ',', '.') ?></strong>
+                        <strong class="text-success">$ <?= number_format((float)$totalPagado, 0, ',', '.') ?></strong>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
                         <span>Saldo pendiente:</span>
                         <strong class="<?= $saldoPendiente > 0 ? 'text-danger' : 'text-success' ?>">
-                            $ <?= number_format($saldoPendiente, 0, ',', '.') ?>
+                            $ <?= number_format((float)$saldoPendiente, 0, ',', '.') ?>
                         </strong>
                     </div>
 

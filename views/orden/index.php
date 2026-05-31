@@ -124,7 +124,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'attribute' => 'total',
-                'value'     => fn($m) => '$ ' . number_format($m->total, 0, ',', '.'),
+'value'     => fn($m) => '$ ' . number_format((float)$m->total, 0, ',', '.'),
             ],
             [
                 'attribute' => 'created_at',

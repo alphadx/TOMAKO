@@ -48,7 +48,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ? '<span class="badge bg-info text-dark">' . Html::encode($model->especialidad->nombre) . '</span>'
                                     : '—',
                             ],
-                            ['label' => 'Costo/Hora', 'value' => $model->costo_hora ? '$ ' . number_format($model->costo_hora, 0, ',', '.') : '—'],
+                            ['label' => 'Costo/Hora', 'value' => $model->costo_hora ? '$ ' . number_format((float)$model->costo_hora, 0, ',', '.') : '—'],
                             ['label' => 'Estado', 'format' => 'raw',
                              'value' => $model->status ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>'],
                             ['label' => 'Registrado', 'value' => $model->created_at ? date('d/m/Y H:i', $model->created_at) : '—'],

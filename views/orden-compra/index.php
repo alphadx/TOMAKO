@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Monto del Mes</h5>
-                    <h2 class="mb-0">$<?= number_format($montoTotalMes, 0, ',', '.') ?></h2>
+<h2 class="mb-0">$<?= number_format((float)$montoTotalMes, 0, ',', '.') ?></h2>
                 </div>
             </div>
         </div>
@@ -103,7 +103,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'total_monto',
                 'value' => function($model) {
-                    return '$' . number_format($model->total_monto, 0, ',', '.');
+return '$' . number_format((float)$model->total_monto, 0, ',', '.');
                 },
             ],
             //'created_at:datetime',

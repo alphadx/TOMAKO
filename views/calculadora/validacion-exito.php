@@ -66,7 +66,7 @@ $this->title = 'Cotización Válida';
                         <tr>
                             <th>Monto Total:</th>
                             <td style="font-size: 20px; font-weight: bold; color: #28a745;">
-                                $<?= number_format($normalizedData['monto_total'] ?? 0, 0, ',', '.') ?>
+$<?= number_format((float)($normalizedData['monto_total'] ?? 0), 0, ',', '.') ?>
                             </td>
                         </tr>
                         

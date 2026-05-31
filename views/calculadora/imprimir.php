@@ -103,13 +103,13 @@ $this->title = 'Cotización de Servicio';
                     <small style="color: #7f8c8d;">Cód: <?= Html::encode($item['servicio_codigo']) ?></small>
                 </td>
                 <td class="text-center"><?= $item['cantidad'] ?></td>
-                <td class="text-right">$ <?= number_format($item['total_final'], 2, ',', '.') ?></td>
+                <td class="text-right">$ <?= number_format((float)$item['total_final'], 2, ',', '.') ?></td>
             </tr>
             <?php endforeach; ?>
             
-            <tr class="neto"><td colspan="2"><strong>NETO</strong></td><td class="text-right">$ <?= number_format($totalNeto, 2, ',', '.') ?></td></tr>
-            <tr class="iva"><td colspan="2"><strong>IVA (<?= number_format($tasaIva, 2) ?>%)</strong></td><td class="text-right">$ <?= number_format($montoIva, 2, ',', '.') ?></td></tr>
-            <tr class="total"><td colspan="2">TOTAL FINAL</td><td class="text-right">$ <?= number_format($totalFinal, 2, ',', '.') ?></td></tr>
+            <tr class="neto"><td colspan="2"><strong>NETO</strong></td><td class="text-right">$ <?= number_format((float)$totalNeto, 2, ',', '.') ?></td></tr>
+            <tr class="iva"><td colspan="2"><strong>IVA (<?= number_format((float)$tasaIva, 2) ?>%)</strong></td><td class="text-right">$ <?= number_format((float)$montoIva, 2, ',', '.') ?></td></tr>
+            <tr class="total"><td colspan="2">TOTAL FINAL</td><td class="text-right">$ <?= number_format((float)$totalFinal, 2, ',', '.') ?></td></tr>
         </table>
         
         <div style="text-align: center; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">

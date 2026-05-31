@@ -47,7 +47,7 @@ $estadoLabels = ['sin_stock' => 'Sin Stock', 'bajo' => 'Stock Bajo', 'en_stock' 
                             'nombre',
                             'descripcion:ntext',
                             ['label' => 'Categoría', 'value' => $model->categoria ? $model->categoria->nombre : '—'],
-                            ['label' => 'Precio Unitario', 'value' => '$ ' . number_format($model->precio_unitario, 0, ',', '.')],
+['label' => 'Precio Unitario', 'value' => '$ ' . number_format((float)$model->precio_unitario, 0, ',', '.')],
                             ['label' => 'Stock Actual', 'format' => 'raw',
                              'value' => '<strong>' . $model->cantidad . '</strong> ' . Html::encode($model->unidad ?? '')],
                             ['label' => 'Stock Mínimo', 'value' => $model->stock_minimo],

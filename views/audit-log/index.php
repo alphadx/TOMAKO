@@ -39,7 +39,7 @@ $totalLogs = (int) ($estadisticas['total_logs'] ?? 0);
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="small text-muted">Total de logs</div>
-                    <div class="h4 mb-0"><?= number_format($totalLogs, 0, ',', '.') ?></div>
+                    <div class="h4 mb-0"><?= number_format((int)$totalLogs, 0, ',', '.') ?></div>
                 </div>
             </div>
         </div>
@@ -47,7 +47,7 @@ $totalLogs = (int) ($estadisticas['total_logs'] ?? 0);
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <div class="small text-muted">Ultimos 7 dias</div>
-                    <div class="h4 mb-0"><?= number_format($statsUltimos, 0, ',', '.') ?></div>
+                    <div class="h4 mb-0"><?= number_format((int)$statsUltimos, 0, ',', '.') ?></div>
                 </div>
             </div>
         </div>

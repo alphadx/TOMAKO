@@ -212,7 +212,7 @@ $etiquetasIds = array_column($etiquetasAsignadas, 'id');
                                             <td><?= Html::encode($vehiculo->marca) ?></td>
                                             <td><?= Html::encode($vehiculo->modelo) ?></td>
                                             <td><?= Html::encode($vehiculo->anio) ?></td>
-                                            <td><?= number_format($vehiculo->km_actual ?? 0, 0, ',', '.') ?> km</td>
+<td><?= number_format((float)($vehiculo->km_actual ?? 0), 0, ',', '.') ?> km</td>
                                             <td>
                                                 <?php if ($vehiculo->ultima_mantencion_at): ?>
                                                     <span class="badge bg-info">

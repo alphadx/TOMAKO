@@ -31,7 +31,7 @@ class m000000_000005_seed_roles_permisos extends Migration
         $adminPassword = trim((string) (getenv('TS_ADMIN_PASSWORD') ?: ''));
         if ($adminPassword === '') {
             $adminPassword = bin2hex(random_bytes(6)) . 'Aa!9';
-            $this->stdout("[seed] TS_ADMIN_PASSWORD no definido. Password admin generado: {$adminPassword}\n");
+            echo "[seed] TS_ADMIN_PASSWORD no definido. Password admin generado: {$adminPassword}\n";
         }
 
         $passwordHash = password_hash($adminPassword, PASSWORD_BCRYPT, ['cost' => 13]);

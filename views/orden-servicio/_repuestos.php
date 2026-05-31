@@ -32,7 +32,7 @@ $repuestosDisponibles = InventoryItem::find()
                         <option value="<?= $repuesto->id ?>">
                             <?= Html::encode($repuesto->nombre) ?> 
                             (Stock: <?= $repuesto->cantidad ?>, 
-                             Precio: $<?= number_format($repuesto->precio_unitario, 0, ',', '.') ?>)
+                             Precio: $<?= number_format((float)$repuesto->precio_unitario, 0, ',', '.') ?>)
                         </option>
                     <?php endforeach ?>
                 </select>
@@ -95,8 +95,8 @@ $repuestosDisponibles = InventoryItem::find()
                                         <span class="badge bg-secondary"><?= $ordenRepuesto->repuesto->unidad ?></span>
                                     </div>
                                 </td>
-                                <td>$<?= number_format($ordenRepuesto->precio_unitario_aplicado, 0, ',', '.') ?></td>
-                                <td><strong>$<?= number_format($ordenRepuesto->subtotal, 0, ',', '.') ?></strong></td>
+                                <td>$<?= number_format((float)$ordenRepuesto->precio_unitario_aplicado, 0, ',', '.') ?></td>
+                                <td><strong>$<?= number_format((float)$ordenRepuesto->subtotal, 0, ',', '.') ?></strong></td>
                                 <td><?= Html::encode($ordenRepuesto->nota ?? '—') ?></td>
                                 <td>
                                     <?= Html::beginForm(['eliminar-repuesto', 'ordenId' => $model->id, 'repuestoId' => $ordenRepuesto->repuesto_id], 'post', ['style' => 'display:inline']) ?>
@@ -112,7 +112,7 @@ $repuestosDisponibles = InventoryItem::find()
                     <tfoot>
                         <tr class="table-active">
                             <th colspan="3">Total Repuestos:</th>
-                            <th colspan="4">$<?= number_format($totalRepuestos, 0, ',', '.') ?></th>
+                            <th colspan="4">$<?= number_format((float)$totalRepuestos, 0, ',', '.') ?></th>
                         </tr>
                     </tfoot>
                 </table>

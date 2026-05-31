@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = 'Cerrar';
 
                     <div class="alert alert-info">
                         <strong>Total Orden:</strong><br>
-                        $<?= number_format($model->total, 0, ',', '.') ?>
+                        $<?= number_format((float)$model->total, 0, ',', '.') ?>
                     </div>
 
                     <!-- Placeholder for Hito 10 Pagos -->

@@ -99,13 +99,13 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'cliente_id',
                 'label' => 'Cliente',
-                'value' => fn($model) => $model->cliente->nombre ?? 'N/A',
+                'value' => fn($model) => $model->cliente?->nombre ?? 'N/A',
                 'filter' => false,
             ],
             [
                 'attribute' => 'vehiculo_id',
                 'label' => 'Vehículo',
-                'value' => fn($model) => ($model->vehiculo->patente ?? 'N/A'),
+                'value' => fn($model) => $model->vehiculo?->patente ?? 'N/A',
                 'filter' => false,
             ],
             [

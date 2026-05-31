@@ -40,7 +40,7 @@ $this->params['breadcrumbs'][] = 'Checklist';
                 </div>
                 <div class="col-md-6">
                     <p><strong>Patente:</strong> <?= Html::encode($model->vehiculo->patente ?? 'N/A') ?></p>
-                    <p><strong>Kilometraje:</strong> <?= number_format($model->vehiculo->kilometraje ?? 0, 0, ',', '.') ?> km</p>
+                    <p><strong>Kilometraje:</strong> <?= number_format((float)($model->vehiculo->kilometraje ?? 0), 0, ',', '.') ?> km</p>
                 </div>
             </div>
         </div>

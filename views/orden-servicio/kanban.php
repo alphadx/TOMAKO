@@ -145,11 +145,11 @@ $prioridadColores = [
                                 
                                 <div class="kanban-card-body" onclick="abrirModalDetalle(<?= $orden->id ?>)">
                                     <h6 class="kanban-titulo">
-                                        <?= Html::encode($orden->vehiculo->modelo ?? 'Vehículo') ?>
-                                        <?= Html::encode($orden->vehiculo->marca ?? '') ?>
+                                        <?= Html::encode($orden->vehiculo?->modelo ?? 'Vehículo') ?>
+                                        <?= Html::encode($orden->vehiculo?->marca ?? '') ?>
                                     </h6>
                                     <p class="kanban-cliente">
-                                        <i class="fas fa-user"></i> <?= Html::encode($orden->cliente->nombre ?? 'Cliente') ?>
+                                    <i class="fas fa-user"></i> <?= Html::encode($orden->cliente?->nombre ?? 'Cliente') ?>
                                     </p>
                                     
                                     <?php if ($tecnicoAsignado): ?>

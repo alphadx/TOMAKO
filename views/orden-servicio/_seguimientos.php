@@ -100,7 +100,7 @@ use app\models\Seguimiento;
                                             <i class="fas fa-star <?= $i <= $seguimiento->satisfaccion ? 'text-warning' : 'text-muted' ?>"></i>
                                         <?php endfor; ?>
                                     </div>
-                                    <small class="text-muted">(NPS: <?= number_format($seguimiento->nps_score ?? 0, 1) ?>)</small>
+                                    <small class="text-muted">(NPS: <?= number_format((float)($seguimiento->nps_score ?? 0), 1) ?>)</small>
                                 <?php else: ?>
                                     <span class="text-muted">-</span>
                                 <?php endif; ?>

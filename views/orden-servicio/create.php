@@ -89,7 +89,7 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio'])->asArray()->al
                                 <div>
                                     <strong><?= Html::encode($servicio['nombre']) ?></strong>
                                     <br>
-                                    <small class="text-muted">$<?= number_format($servicio['precio'], 0, ',', '.') ?></small>
+                                    <small class="text-muted">$<?= number_format((float)$servicio['precio'], 0, ',', '.') ?></small>
                                 </div>
                                 <button
                                     type="button"

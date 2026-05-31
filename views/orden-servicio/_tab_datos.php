@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use yii\helpers\Html;
+use yii\widgets\DetailView;
 use app\models\OrdenServicio;
 
 /** @var app\models\OrdenServicio $model */
@@ -9,52 +10,70 @@ use app\models\OrdenServicio;
 
 <div class="row">
     <div class="col-md-6">
-        <table class="table table-borderless">
-            <tr>
-                <th>Cliente:</th>
-                <td><?= Html::encode($model->cliente->nombre ?? 'N/A') ?></td>
-            </tr>
-            <tr>
-                <th>Vehículo:</th>
-                <td><?= Html::encode($model->vehiculo->patente ?? 'N/A') ?> - <?= Html::encode($model->vehiculo->marca ?? '') ?> <?= Html::encode($model->vehiculo->modelo ?? '') ?></td>
-            </tr>
-            <tr>
-                <th>Cita Relacionada:</th>
-                <td><?= $model->cita_id ? Html::encode($model->cita->codigo ?? 'N/A') : 'N/A' ?></td>
-            </tr>
-            <tr>
-                <th>Estado:</th>
-                <td><?= $model->getEstadoBadgeClass() ?></td>
-            </tr>
-            <tr>
-                <th>Prioridad:</th>
-                <td><?= $model->getPrioridadBadge() ?></td>
-            </tr>
-        </table>
+        <?= DetailView::widget([
+            'model' => $model,
+            'options' => ['class' => 'table table-borderless'],
+            'attributes' => [
+                [
+                    'label' => 'Cliente',
+                    'value' => $model->cliente?->nombre ?? 'N/A',
+                ],
+                [
+                    'label' => 'Vehículo',
+                    'value' => implode(' - ', array_filter([
+                        $model->vehiculo?->patente ?? null,
+                        trim(($model->vehiculo?->marca ?? '') . ' ' . ($model->vehiculo?->modelo ?? '')),
+                    ])) ?: 'N/A',
+                ],
+                [
+                    'label' => 'Cita Relacionada',
+                    'value' => $model->cita_id ? ($model->cita?->codigo ?? 'N/A') : 'N/A',
+                ],
+                [
+                    'attribute' => 'estado',
+                    'format' => 'raw',
+                    'value' => $model->getEstadoBadgeClass(),
+                ],
+                [
+                    'attribute' => 'prioridad',
+                    'format' => 'raw',
+                    'value' => $model->getPrioridadBadge(),
+                ],
+            ],
+        ]) ?>
     </div>
     <div class="col-md-6">
-        <table class="table table-borderless">
-            <tr>
-                <th>Total:</th>
-                <td class="text-end"><strong>$<?= number_format($model->total, 0, ',', '.') ?></strong></td>
-            </tr>
-            <tr>
-                <th>Abierta:</th>
-                <td><?= $model->opened_at ? date('d/m/Y H:i', $model->opened_at) : 'N/A' ?></td>
-            </tr>
-            <tr>
-                <th>Cerrada:</th>
-                <td><?= $model->closed_at ? date('d/m/Y H:i', $model->closed_at) : 'Abierta' ?></td>
-            </tr>
-            <tr>
-                <th>Creada:</th>
-                <td><?= date('d/m/Y H:i', $model->created_at) ?></td>
-            </tr>
-            <tr>
-                <th>Actualizada:</th>
-                <td><?= date('d/m/Y H:i', $model->updated_at) ?></td>
-            </tr>
-        </table>
+        <?= DetailView::widget([
+            'model' => $model,
+            'options' => ['class' => 'table table-borderless'],
+            'attributes' => [
+                [
+                    'attribute' => 'total',
+                    'format' => ['decimal', 0],
+                    'value' => (float) $model->total,
+                ],
+                [
+                    'attribute' => 'opened_at',
+                    'format' => 'datetime',
+                    'value' => $model->opened_at,
+                ],
+                [
+                    'attribute' => 'closed_at',
+                    'format' => 'datetime',
+                    'value' => $model->closed_at ?: null,
+                ],
+                [
+                    'attribute' => 'created_at',
+                    'format' => 'datetime',
+                    'value' => $model->created_at,
+                ],
+                [
+                    'attribute' => 'updated_at',
+                    'format' => 'datetime',
+                    'value' => $model->updated_at,
+                ],
+            ],
+        ]) ?>
     </div>
 </div>
 

@@ -14,7 +14,7 @@ $this->params['breadcrumbs'][] = ['label' => 'Órdenes', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $clientes = Cliente::find()->select(['id', 'nombre'])->asArray()->all();
-$servicios = Servicio::find()->select(['id', 'nombre', 'precio'])->asArray()->all();
+$servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray()->all();
 ?>
 
 <div class="orden-servicio-create">
@@ -89,14 +89,14 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio'])->asArray()->al
                                 <div>
                                     <strong><?= Html::encode($servicio['nombre']) ?></strong>
                                     <br>
-                                    <small class="text-muted">$<?= number_format((float)$servicio['precio'], 0, ',', '.') ?></small>
+                                    <small class="text-muted">$<?= number_format((float)$servicio['precio_base'], 0, ',', '.') ?></small>
                                 </div>
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-primary"
                                     data-servicio-id="<?= $servicio['id'] ?>"
                                     data-servicio-nombre="<?= $servicio['nombre'] ?>"
-                                    data-servicio-precio="<?= $servicio['precio'] ?>"
+                                    data-servicio-precio="<?= $servicio['precio_base'] ?>"
                                 >
                                     +
                                 </button>

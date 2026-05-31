@@ -4,6 +4,9 @@
  */
 
 use yii\helpers\Html;
+use yii\widgets\DetailView;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 
 $this->title = 'Detalle: ' . $tecnico->getFullName();
 $this->params['breadcrumbs'][] = ['label' => 'Productividad', 'url' => ['index']];
@@ -20,14 +23,36 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h5 class="mb-0">Información del Técnico</h5>
                 </div>
                 <div class="card-body">
-                    <p><strong>Nombre:</strong> <?= Html::encode($tecnico->getFullName()) ?></p>
-                    <p><strong>RUT:</strong> <?= Html::encode($tecnico->rut ?? 'N/A') ?></p>
-                    <p><strong>Especialidad:</strong> 
-                        <?= $tecnico->especialidad ? Html::encode($tecnico->especialidad->nombre) : 'General' ?>
-                    </p>
-                    <p><strong>Email:</strong> <?= Html::encode($tecnico->email ?? 'N/A') ?></p>
-                    <p><strong>Teléfono:</strong> <?= Html::encode($tecnico->telefono ?? 'N/A') ?></p>
-                    <p><strong>Costo Hora:</strong> $<?= number_format((float)$tecnico->costo_hora, 0, ',', '.') ?></p>
+                    <?= DetailView::widget([
+                        'model' => $tecnico,
+                        'options' => ['class' => 'table table-borderless mb-0'],
+                        'attributes' => [
+                            [
+                                'label' => 'Nombre',
+                                'value' => $tecnico->getFullName(),
+                            ],
+                            [
+                                'label' => 'RUT',
+                                'value' => $tecnico->rut ?? 'N/A',
+                            ],
+                            [
+                                'label' => 'Especialidad',
+                                'value' => $tecnico->especialidad ? $tecnico->especialidad->nombre : 'General',
+                            ],
+                            [
+                                'label' => 'Email',
+                                'value' => $tecnico->email ?? 'N/A',
+                            ],
+                            [
+                                'label' => 'Teléfono',
+                                'value' => $tecnico->telefono ?? 'N/A',
+                            ],
+                            [
+                                'label' => 'Costo Hora',
+                                'value' => '$' . number_format((float)$tecnico->costo_hora, 0, ',', '.'),
+                            ],
+                        ],
+                    ]) ?>
                 </div>
             </div>
         </div>
@@ -47,66 +72,97 @@ $this->params['breadcrumbs'][] = $this->title;
                             No hay órdenes registradas para este técnico en el período seleccionado.
                         </p>
                     <?php else: ?>
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Orden</th>
-                                    <th>Fecha Ingreso</th>
-                                    <th>Fecha Término</th>
-                                    <th>Cliente</th>
-                                    <th>Horas Trabajadas</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php 
-                                $totalHoras = 0;
-                                $totalIngresos = 0;
-                                foreach ($ordenes as $orden): 
-                                    // Calcular horas trabajadas
-                                    $horasTrabajadas = 0;
-                                    if ($orden->closed_at !== null && $orden->created_at !== null) {
-                                        $horasTrabajadas = round(($orden->closed_at - $orden->created_at) / 3600, 2);
-                                    }
-                                    $totalHoras += $horasTrabajadas;
-                                    
-                                    // Calcular total de la orden
-                                    $totalOrden = 0;
-                                    if ($orden->detalles) {
-                                        foreach ($orden->detalles as $detalle) {
-                                            $totalOrden += $detalle->precio_total ?? 0;
-                                        }
-                                    }
-                                    $totalIngresos += $totalOrden;
-                                ?>
-                                    <tr>
-                                        <td><a href="<?= \yii\helpers\Url::to(['/orden-servicio/view', 'id' => $orden->id]) ?>">#<?= $orden->id ?></a></td>
-                                        <td><?= date('d/m/Y H:i', $orden->created_at) ?></td>
-                                        <td><?= $orden->closed_at ? date('d/m/Y H:i', $orden->closed_at) : '-' ?></td>
-                                        <td><?= $orden->cliente ? Html::encode($orden->cliente->getFullName()) : 'N/A' ?></td>
-                                        <td class="text-center"><?= $horasTrabajadas ?>h</td>
-<td class="text-right">$<?= number_format((float)$totalOrden, 0, ',', '.') ?></td>
-                                        <td><span class="badge badge-info"><?= str_replace('_', ' ', ucfirst($orden->estado)) ?></span></td>
-                                        <td>
-                                            <?= Html::a('<i class="fas fa-eye"></i>', ['/orden-servicio/view', 'id' => $orden->id], [
-                                                'class' => 'btn btn-sm btn-outline-primary',
-                                                'title' => 'Ver orden',
-                                            ]) ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                            <tfoot>
-                                <tr class="table-active">
-                                    <th colspan="4" class="text-right">Totales del Período:</th>
-                                    <th class="text-center"><?= round($totalHoras, 2) ?>h</th>
-<th class="text-right">$<?= number_format((float)$totalIngresos, 0, ',', '.') ?></th>
-                                    <th colspan="2"></th>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <?php
+                        $totalHoras = 0;
+                        $totalIngresos = 0;
+                        $ordenesData = [];
+                        foreach ($ordenes as $orden) {
+                            $horasTrabajadas = 0;
+                            if ($orden->closed_at !== null && $orden->created_at !== null) {
+                                $horasTrabajadas = round(($orden->closed_at - $orden->created_at) / 3600, 2);
+                            }
+                            $totalHoras += $horasTrabajadas;
+
+                            $totalOrden = 0;
+                            if ($orden->detalles) {
+                                foreach ($orden->detalles as $detalle) {
+                                    $totalOrden += $detalle->precio_total ?? 0;
+                                }
+                            }
+                            $totalIngresos += $totalOrden;
+
+                            $ordenesData[] = [
+                                'id' => $orden->id,
+                                'created_at' => $orden->created_at,
+                                'closed_at' => $orden->closed_at,
+                                'cliente' => $orden->cliente ? $orden->cliente->getFullName() : 'N/A',
+                                'horasTrabajadas' => $horasTrabajadas,
+                                'totalOrden' => $totalOrden,
+                                'estado' => $orden->estado,
+                            ];
+                        }
+                        $ordenesProvider = new ArrayDataProvider([
+                            'allModels' => $ordenesData,
+                            'pagination' => false,
+                        ]);
+                        ?>
+                        <?= GridView::widget([
+                            'dataProvider' => $ordenesProvider,
+                            'tableOptions' => ['class' => 'table table-hover mb-0'],
+                            'layout' => '{items}',
+                            'columns' => [
+                                [
+                                    'label' => 'Orden',
+                                    'format' => 'raw',
+                                    'value' => fn($model) => Html::a('#' . $model['id'], ['/orden-servicio/view', 'id' => $model['id']]),
+                                ],
+                                [
+                                    'label' => 'Fecha Ingreso',
+                                    'value' => fn($model) => date('d/m/Y H:i', $model['created_at']),
+                                ],
+                                [
+                                    'label' => 'Fecha Término',
+                                    'value' => fn($model) => $model['closed_at'] ? date('d/m/Y H:i', $model['closed_at']) : '-',
+                                ],
+                                [
+                                    'label' => 'Cliente',
+                                    'value' => fn($model) => Html::encode($model['cliente']),
+                                ],
+                                [
+                                    'label' => 'Horas Trabajadas',
+                                    'value' => fn($model) => $model['horasTrabajadas'] . 'h',
+                                    'contentOptions' => ['class' => 'text-center'],
+                                    'headerOptions' => ['class' => 'text-center'],
+                                ],
+                                [
+                                    'label' => 'Total',
+                                    'value' => fn($model) => '$' . number_format((float)$model['totalOrden'], 0, ',', '.'),
+                                    'contentOptions' => ['class' => 'text-end'],
+                                    'headerOptions' => ['class' => 'text-end'],
+                                ],
+                                [
+                                    'label' => 'Estado',
+                                    'format' => 'raw',
+                                    'value' => fn($model) => '<span class="badge bg-info">' . str_replace('_', ' ', ucfirst($model['estado'])) . '</span>',
+                                ],
+                                [
+                                    'class' => 'yii\grid\ActionColumn',
+                                    'template' => '{view}',
+                                    'buttons' => [
+                                        'view' => fn($url, $model) => Html::a(
+                                            '<i class="fas fa-eye"></i>',
+                                            ['/orden-servicio/view', 'id' => $model['id']],
+                                            ['class' => 'btn btn-sm btn-outline-primary', 'title' => 'Ver orden']
+                                        ),
+                                    ],
+                                ],
+                            ],
+                        ]) ?>
+                        <div class="d-flex justify-content-end gap-4 mt-2 p-2 bg-light rounded">
+                            <strong>Totales del Período:</strong>
+                            <span>Horas: <strong><?= round($totalHoras, 2) ?>h</strong></span>
+                            <span>Ingresos: <strong>$<?= number_format((float)$totalIngresos, 0, ',', '.') ?></strong></span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>

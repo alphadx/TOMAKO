@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\Response;
+use yii\data\ActiveDataProvider;
 use app\models\Rol;
 use app\models\Permiso;
 use app\components\services\RolService;
@@ -48,8 +49,13 @@ class RolController extends BaseController
     public function actionIndex(): string
     {
         $this->requireAdmin();
-        $roles = Rol::find()->orderBy('id')->all();
-        return $this->render('index', ['roles' => $roles]);
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => Rol::find()->orderBy('id'),
+            'pagination' => ['pageSize' => 20],
+        ]);
+
+        return $this->render('index', ['dataProvider' => $dataProvider]);
     }
 
     /** Detalle de un rol con sus permisos. */

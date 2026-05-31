@@ -4,6 +4,8 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 use app\models\Vehiculo;
 use app\models\Etiqueta;
 use app\models\ClienteEtiqueta;
@@ -189,63 +191,61 @@ $etiquetasIds = array_column($etiquetasAsignadas, 'id');
                 </div>
                 <div class="card-body">
                     <?php if (count($vehiculos) > 0): ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Patente</th>
-                                        <th>Marca</th>
-                                        <th>Modelo</th>
-                                        <th>Año</th>
-                                        <th>KM Actual</th>
-                                        <th>Última Mantención</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($vehiculos as $vehiculo): ?>
-                                        <tr>
-                                            <td>
-                                                <strong><?= Html::encode($vehiculo->patente) ?></strong>
-                                            </td>
-                                            <td><?= Html::encode($vehiculo->marca) ?></td>
-                                            <td><?= Html::encode($vehiculo->modelo) ?></td>
-                                            <td><?= Html::encode($vehiculo->anio) ?></td>
-<td><?= number_format((float)($vehiculo->km_actual ?? 0), 0, ',', '.') ?> km</td>
-                                            <td>
-                                                <?php if ($vehiculo->ultima_mantencion_at): ?>
-                                                    <span class="badge bg-info">
-                                                        <?= date('d/m/Y', $vehiculo->ultima_mantencion_at) ?>
-                                                    </span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-secondary">Sin registro</span>
-                                                <?php endif ?>
-                                            </td>
-                                            <td>
-                                                <?= $vehiculo->status
-                                                    ? '<span class="badge bg-success">Activo</span>'
-                                                    : '<span class="badge bg-danger">Inactivo</span>' ?>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <?= Html::a(
-                                                        '<i class="bi bi-eye"></i>',
-                                                        ['/vehiculo/view', 'id' => $vehiculo->id],
-                                                        ['class' => 'btn btn-outline-info', 'title' => 'Ver']
-                                                    ) ?>
-                                                    <?= Html::a(
-                                                        '<i class="bi bi-pencil"></i>',
-                                                        ['/vehiculo/update', 'id' => $vehiculo->id],
-                                                        ['class' => 'btn btn-outline-warning', 'title' => 'Editar']
-                                                    ) ?>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach ?>
-                                </tbody>
-                            </table>
-                        </div>
+                        <?php
+                        $vehiculosProvider = new ArrayDataProvider([
+                            'allModels' => $vehiculos,
+                            'pagination' => false,
+                        ]);
+                        ?>
+                        <?= GridView::widget([
+                            'dataProvider' => $vehiculosProvider,
+                            'tableOptions' => ['class' => 'table table-hover mb-0'],
+                            'layout' => '{items}',
+                            'columns' => [
+                                [
+                                    'attribute' => 'patente',
+                                    'value' => fn($model) => '<strong>' . Html::encode($model->patente) . '</strong>',
+                                    'format' => 'raw',
+                                ],
+                                'marca',
+                                'modelo',
+                                'anio',
+                                [
+                                    'label' => 'KM Actual',
+                                    'value' => fn($model) => number_format((float)($model->km_actual ?? 0), 0, ',', '.') . ' km',
+                                ],
+                                [
+                                    'label' => 'Última Mantención',
+                                    'format' => 'raw',
+                                    'value' => fn($model) => $model->ultima_mantencion_at
+                                        ? '<span class="badge bg-info">' . date('d/m/Y', $model->ultima_mantencion_at) . '</span>'
+                                        : '<span class="badge bg-secondary">Sin registro</span>',
+                                ],
+                                [
+                                    'attribute' => 'status',
+                                    'format' => 'raw',
+                                    'value' => fn($model) => $model->status
+                                        ? '<span class="badge bg-success">Activo</span>'
+                                        : '<span class="badge bg-danger">Inactivo</span>',
+                                ],
+                                [
+                                    'class' => 'yii\grid\ActionColumn',
+                                    'template' => '{view} {update}',
+                                    'buttons' => [
+                                        'view' => fn($url, $model) => Html::a(
+                                            '<i class="bi bi-eye"></i>',
+                                            ['/vehiculo/view', 'id' => $model->id],
+                                            ['class' => 'btn btn-sm btn-outline-info', 'title' => 'Ver']
+                                        ),
+                                        'update' => fn($url, $model) => Html::a(
+                                            '<i class="bi bi-pencil"></i>',
+                                            ['/vehiculo/update', 'id' => $model->id],
+                                            ['class' => 'btn btn-sm btn-outline-warning', 'title' => 'Editar']
+                                        ),
+                                    ],
+                                ],
+                            ],
+                        ]); ?>
                     <?php else: ?>
                         <div class="text-center py-4">
                             <i class="bi bi-car-front display-4 text-muted"></i>

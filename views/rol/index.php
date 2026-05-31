@@ -1,8 +1,9 @@
 <?php
 /** @var yii\web\View $this */
-/** @var app\models\Rol[] $roles */
+/** @var yii\data\ActiveDataProvider $dataProvider */
 
 use yii\helpers\Html;
+use yii\grid\GridView;
 
 $this->title = 'Roles del Sistema';
 $this->params['breadcrumbs'][] = $this->title;
@@ -16,43 +17,54 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="card">
         <div class="card-body p-0">
-            <table class="table table-hover table-striped align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Estado</th>
-                        <th>Usuarios</th>
-                        <th class="text-end">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($roles as $rol): ?>
-                    <tr>
-                        <td><?= $rol->id ?></td>
-                        <td><strong><?= Html::encode($rol->nombre) ?></strong></td>
-                        <td class="text-muted"><?= Html::encode($rol->descripcion ?? '—') ?></td>
-                        <td>
-                            <?= $rol->activo
-                                ? '<span class="badge bg-success">Activo</span>'
-                                : '<span class="badge bg-danger">Inactivo</span>' ?>
-                        </td>
-                        <td>
-                            <span class="badge bg-primary rounded-pill">
-                                <?= count($rol->usuarios) ?>
-                            </span>
-                        </td>
-                        <td class="text-end">
-                            <?= Html::a('<i class="bi bi-eye"></i><span>Ver</span>', ['view', 'id' => $rol->id],
-                                ['class' => 'btn btn-sm btn-outline-primary me-1 ts-action-btn', 'title' => 'Ver']) ?>
-                            <?= Html::a('<i class="bi bi-pencil"></i><span>Editar</span>', ['update', 'id' => $rol->id],
-                                ['class' => 'btn btn-sm btn-outline-secondary ts-action-btn', 'title' => 'Editar']) ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <?= GridView::widget([
+                'dataProvider' => $dataProvider,
+                'tableOptions' => ['class' => 'table table-hover table-striped align-middle mb-0'],
+                'headerRowOptions' => ['class' => 'table-dark'],
+                'layout' => '{items}{pager}',
+                'pager' => [
+                    'class' => \yii\bootstrap5\LinkPager::class,
+                    'options' => ['class' => 'pagination justify-content-center mt-3'],
+                ],
+                'columns' => [
+                    'id',
+                    'nombre',
+                    [
+                        'attribute' => 'descripcion',
+                        'value' => fn($model) => $model->descripcion ?? '—',
+                        'contentOptions' => ['class' => 'text-muted'],
+                    ],
+                    [
+                        'attribute' => 'activo',
+                        'format' => 'raw',
+                        'value' => fn($model) => $model->activo
+                            ? '<span class="badge bg-success">Activo</span>'
+                            : '<span class="badge bg-danger">Inactivo</span>',
+                    ],
+                    [
+                        'label' => 'Usuarios',
+                        'format' => 'raw',
+                        'value' => fn($model) => '<span class="badge bg-primary rounded-pill">' . count($model->usuarios) . '</span>',
+                    ],
+                    [
+                        'class' => 'yii\grid\ActionColumn',
+                        'template' => '{view} {update}',
+                        'buttons' => [
+                            'view' => fn($url, $model) => Html::a(
+                                '<i class="bi bi-eye"></i><span>Ver</span>',
+                                ['view', 'id' => $model->id],
+                                ['class' => 'btn btn-sm btn-outline-primary me-1 ts-action-btn', 'title' => 'Ver']
+                            ),
+                            'update' => fn($url, $model) => Html::a(
+                                '<i class="bi bi-pencil"></i><span>Editar</span>',
+                                ['update', 'id' => $model->id],
+                                ['class' => 'btn btn-sm btn-outline-secondary ts-action-btn', 'title' => 'Editar']
+                            ),
+                        ],
+                        'contentOptions' => ['class' => 'text-end'],
+                    ],
+                ],
+            ]); ?>
         </div>
     </div>
 </div>

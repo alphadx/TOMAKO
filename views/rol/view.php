@@ -5,6 +5,7 @@
 /** @var int[] $asignados IDs de permisos asignados */
 
 use yii\helpers\Html;
+use yii\widgets\DetailView;
 
 $this->title = 'Rol: ' . $model->nombre;
 $this->params['breadcrumbs'][] = ['label' => 'Roles', 'url' => ['index']];
@@ -25,24 +26,30 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card h-100">
                 <div class="card-header"><strong>Información del Rol</strong></div>
                 <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-5">ID:</dt>
-                        <dd class="col-7"><?= $model->id ?></dd>
-                        <dt class="col-5">Nombre:</dt>
-                        <dd class="col-7"><strong><?= Html::encode($model->nombre) ?></strong></dd>
-                        <dt class="col-5">Descripción:</dt>
-                        <dd class="col-7"><?= Html::encode($model->descripcion ?? '—') ?></dd>
-                        <dt class="col-5">Estado:</dt>
-                        <dd class="col-7">
-                            <?= $model->activo
-                                ? '<span class="badge bg-success">Activo</span>'
-                                : '<span class="badge bg-danger">Inactivo</span>' ?>
-                        </dd>
-                        <dt class="col-5">Usuarios:</dt>
-                        <dd class="col-7">
-                            <span class="badge bg-primary"><?= count($model->usuarios) ?></span>
-                        </dd>
-                    </dl>
+                    <?= DetailView::widget([
+                        'model' => $model,
+                        'options' => ['class' => 'table table-borderless mb-0'],
+                        'attributes' => [
+                            'id',
+                            'nombre',
+                            [
+                                'attribute' => 'descripcion',
+                                'value' => $model->descripcion ?? '—',
+                            ],
+                            [
+                                'attribute' => 'activo',
+                                'format' => 'raw',
+                                'value' => $model->activo
+                                    ? '<span class="badge bg-success">Activo</span>'
+                                    : '<span class="badge bg-danger">Inactivo</span>',
+                            ],
+                            [
+                                'label' => 'Usuarios',
+                                'format' => 'raw',
+                                'value' => '<span class="badge bg-primary">' . count($model->usuarios) . '</span>',
+                            ],
+                        ],
+                    ]) ?>
                 </div>
             </div>
         </div>

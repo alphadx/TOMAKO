@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use yii\helpers\Html;
+use yii\widgets\DetailView;
 
 /** @var yii\web\View $this */
 /** @var app\models\OrdenServicio $model */
@@ -58,28 +59,29 @@ $this->params['breadcrumbs'][] = 'Cerrar';
                     <h6>Resumen de Orden</h6>
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <td><strong>Cliente:</strong></td>
-                            <td><?= htmlspecialchars($model->cliente?->nombre ?? 'N/A') ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Vehículo:</strong></td>
-                            <td><?= htmlspecialchars($model->vehiculo?->patente ?? 'N/A') ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>estado:</strong></td>
-                            <td><?= htmlspecialchars($model->estado) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Servicios:</strong></td>
-                            <td><?= count($model->detalles) ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Técnicos:</strong></td>
-                            <td><?= count($model->asignaciones) ?></td>
-                        </tr>
-                    </table>
+                    <?= DetailView::widget([
+                        'model' => $model,
+                        'options' => ['class' => 'table table-sm mb-0'],
+                        'attributes' => [
+                            [
+                                'label' => 'Cliente',
+                                'value' => $model->cliente?->nombre ?? 'N/A',
+                            ],
+                            [
+                                'label' => 'Vehículo',
+                                'value' => $model->vehiculo?->patente ?? 'N/A',
+                            ],
+                            'estado',
+                            [
+                                'label' => 'Servicios',
+                                'value' => count($model->detalles),
+                            ],
+                            [
+                                'label' => 'Técnicos',
+                                'value' => count($model->asignaciones),
+                            ],
+                        ],
+                    ]) ?>
 
                     <hr>
 

@@ -6,6 +6,8 @@
 use app\models\AuditLog;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 
 $this->title = 'Detalle de Auditoria #' . $model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Auditoria', 'url' => ['index']];
@@ -95,28 +97,49 @@ $cambios = (array) ($diff['cambios'] ?? []);
             <?php if ($cambios === []): ?>
                 <div class="p-3 text-muted">No hay diferencias de campos para este evento.</div>
             <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0 align-middle">
-                        <thead>
-                            <tr>
-                                <th style="width: 24%;">Campo</th>
-                                <th>Anterior</th>
-                                <th>Nuevo</th>
-                                <th style="width: 12%;">Tipo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($cambios as $campo => $valor): ?>
-                                <tr>
-                                    <td><code><?= Html::encode((string) $campo) ?></code></td>
-                                    <td><?= Html::encode(is_scalar($valor['anterior']) ? (string) $valor['anterior'] : json_encode($valor['anterior'], JSON_UNESCAPED_UNICODE)) ?></td>
-                                    <td><?= Html::encode(is_scalar($valor['nuevo']) ? (string) $valor['nuevo'] : json_encode($valor['nuevo'], JSON_UNESCAPED_UNICODE)) ?></td>
-                                    <td><span class="badge text-bg-light"><?= Html::encode((string) ($valor['tipo'] ?? '')) ?></span></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <?php
+                $cambiosData = [];
+                foreach ($cambios as $campo => $valor) {
+                    $cambiosData[] = [
+                        'campo' => $campo,
+                        'anterior' => $valor['anterior'] ?? null,
+                        'nuevo' => $valor['nuevo'] ?? null,
+                        'tipo' => $valor['tipo'] ?? '',
+                    ];
+                }
+                $cambiosProvider = new ArrayDataProvider([
+                    'allModels' => $cambiosData,
+                    'pagination' => false,
+                ]);
+                ?>
+                <?= GridView::widget([
+                    'dataProvider' => $cambiosProvider,
+                    'tableOptions' => ['class' => 'table table-striped table-hover mb-0 align-middle'],
+                    'layout' => '{items}',
+                    'columns' => [
+                        [
+                            'label' => 'Campo',
+                            'attribute' => 'campo',
+                            'format' => 'raw',
+                            'value' => fn($model) => '<code>' . Html::encode((string) $model['campo']) . '</code>',
+                            'contentOptions' => ['style' => 'width: 24%;'],
+                        ],
+                        [
+                            'label' => 'Anterior',
+                            'value' => fn($model) => Html::encode(is_scalar($model['anterior']) ? (string) $model['anterior'] : json_encode($model['anterior'], JSON_UNESCAPED_UNICODE)),
+                        ],
+                        [
+                            'label' => 'Nuevo',
+                            'value' => fn($model) => Html::encode(is_scalar($model['nuevo']) ? (string) $model['nuevo'] : json_encode($model['nuevo'], JSON_UNESCAPED_UNICODE)),
+                        ],
+                        [
+                            'label' => 'Tipo',
+                            'format' => 'raw',
+                            'value' => fn($model) => '<span class="badge text-bg-light">' . Html::encode((string) $model['tipo']) . '</span>',
+                            'contentOptions' => ['style' => 'width: 12%;'],
+                        ],
+                    ],
+                ]); ?>
             <?php endif; ?>
         </div>
     </div>

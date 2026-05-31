@@ -1,9 +1,15 @@
 <?php
 /**
  * Vista de Recordatorios Automáticos de Citas - HU-019
+ * @var yii\data\ArrayDataProvider $citasMananaProvider
+ * @var yii\data\ArrayDataProvider $citasHoyProvider
+ * @var int $totalRecordatoriosEnviados
+ * @var int $totalPendientes
+ * @var bool $plantillaExiste
  */
 
 use yii\helpers\Html;
+use yii\grid\GridView;
 
 $this->title = 'Recordatorios Automáticos de Citas';
 $this->params['breadcrumbs'][] = $this->title;
@@ -18,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Citas para Hoy</h5>
-                    <h3 class="mb-0"><?= count($citasHoy) ?></h3>
+                    <h3 class="mb-0"><?= $citasHoyProvider->getTotalCount() ?></h3>
                 </div>
             </div>
         </div>
@@ -81,39 +87,37 @@ $this->params['breadcrumbs'][] = $this->title;
                 Recordatorios Pendientes - Citas para Mañana (<?= date('d/m/Y', strtotime('+1 day')) ?>)
             </h5>
         </div>
-        <div class="card-body">
-            <?php if (empty($citasManana)): ?>
-                <p class="text-muted text-center mb-0">
-                    No hay citas confirmadas para mañana que requieran recordatorio.
-                </p>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Hora</th>
-                                <th>Cliente</th>
-                                <th>Vehículo</th>
-                                <th>Email</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($citasManana as $cita): ?>
-                                <tr>
-                                    <td><strong><?= $cita->hora_inicio ?></strong></td>
-                                    <td><?= Html::encode($cita->cliente->getFullName()) ?></td>
-                                    <td><?= Html::encode($cita->vehiculo->marca_modelo ?? 'N/A') ?></td>
-                                    <td><?= Html::encode($cita->cliente->email ?? 'Sin email') ?></td>
-                                    <td>
-                                        <span class="badge badge-warning">Pendiente</span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
+        <div class="card-body p-0">
+            <?= GridView::widget([
+                'dataProvider' => $citasMananaProvider,
+                'tableOptions' => ['class' => 'table table-hover mb-0'],
+                'layout' => '{items}',
+                'emptyText' => 'No hay citas confirmadas para mañana que requieran recordatorio.',
+                'columns' => [
+                    [
+                        'label' => 'Hora',
+                        'attribute' => 'hora_inicio',
+                        'contentOptions' => ['class' => 'fw-bold'],
+                    ],
+                    [
+                        'label' => 'Cliente',
+                        'value' => fn($model) => Html::encode($model->cliente->getFullName()),
+                    ],
+                    [
+                        'label' => 'Vehículo',
+                        'value' => fn($model) => Html::encode($model->vehiculo->marca_modelo ?? 'N/A'),
+                    ],
+                    [
+                        'label' => 'Email',
+                        'value' => fn($model) => Html::encode($model->cliente->email ?? 'Sin email'),
+                    ],
+                    [
+                        'label' => 'Estado',
+                        'format' => 'raw',
+                        'value' => fn() => '<span class="badge bg-warning text-dark">Pendiente</span>',
+                    ],
+                ],
+            ]); ?>
         </div>
     </div>
 
@@ -125,41 +129,38 @@ $this->params['breadcrumbs'][] = $this->title;
                 Citas Confirmadas - Hoy (<?= date('d/m/Y') ?>)
             </h5>
         </div>
-        <div class="card-body">
-            <?php if (empty($citasHoy)): ?>
-                <p class="text-muted text-center mb-0">
-                    No hay citas confirmadas para hoy.
-                </p>
-            <?php else: ?>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Hora</th>
-                                <th>Cliente</th>
-                                <th>Vehículo</th>
-                                <th>Servicios</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($citasHoy as $cita): ?>
-                                <tr>
-                                    <td><strong><?= $cita->hora_inicio ?></strong></td>
-                                    <td><?= Html::encode($cita->cliente->getFullName()) ?></td>
-                                    <td><?= Html::encode($cita->vehiculo->marca_modelo ?? 'N/A') ?></td>
-                                    <td><?= $cita->getTiempoAproximadoFormateado() ?></td>
-                                    <td>
-                                        <span class="badge badge-<?= $cita->getEstadoBadgeClass() ?>">
-                                            <?= $cita->getEstadoLabel() ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
+        <div class="card-body p-0">
+            <?= GridView::widget([
+                'dataProvider' => $citasHoyProvider,
+                'tableOptions' => ['class' => 'table table-hover mb-0'],
+                'layout' => '{items}',
+                'emptyText' => 'No hay citas confirmadas para hoy.',
+                'columns' => [
+                    [
+                        'label' => 'Hora',
+                        'attribute' => 'hora_inicio',
+                        'contentOptions' => ['class' => 'fw-bold'],
+                    ],
+                    [
+                        'label' => 'Cliente',
+                        'value' => fn($model) => Html::encode($model->cliente->getFullName()),
+                    ],
+                    [
+                        'label' => 'Vehículo',
+                        'value' => fn($model) => Html::encode($model->vehiculo->marca_modelo ?? 'N/A'),
+                    ],
+                    [
+                        'label' => 'Servicios',
+                        'value' => fn($model) => $model->getTiempoAproximadoFormateado(),
+                    ],
+                    [
+                        'label' => 'Estado',
+                        'format' => 'raw',
+                        'value' => fn($model) => '<span class="badge bg-' . $model->getEstadoBadgeClass() . '">'
+                            . Html::encode($model->getEstadoLabel()) . '</span>',
+                    ],
+                ],
+            ]); ?>
         </div>
     </div>
 </div>

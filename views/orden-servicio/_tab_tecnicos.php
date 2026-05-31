@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 use yii\helpers\Html;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 
 /** @var app\models\OrdenServicio $model */
 ?>
@@ -9,26 +11,41 @@ use yii\helpers\Html;
 <?php if (empty($model->asignaciones)): ?>
     <p class="text-muted">Sin técnicos asignados</p>
 <?php else: ?>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Técnico</th>
-                <th>Especialidad</th>
-                <th>Asignado</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($model->asignaciones as $asignacion): ?>
-                <tr>
-                    <td><?= Html::encode($asignacion->tecnico?->nombre ?? 'N/A') ?></td>
-                    <td><?= Html::encode($asignacion->tecnico?->especialidad?->nombre ?? 'N/A') ?></td>
-                    <td><?= $asignacion->asignado_at ? date('d/m/Y H:i', $asignacion->asignado_at) : 'N/A' ?></td>
-                    <td class="text-end">
-                        <?= Html::a('<i class="bi bi-x"></i>', '#', ['class' => 'btn btn-sm btn-danger']) ?>
-                    </td>
-                </tr>
-            <?php endforeach ?>
-        </tbody>
-    </table>
+    <?php
+    $asignacionesProvider = new ArrayDataProvider([
+        'allModels' => $model->asignaciones,
+        'pagination' => false,
+    ]);
+    ?>
+    <?= GridView::widget([
+        'dataProvider' => $asignacionesProvider,
+        'tableOptions' => ['class' => 'table table-striped mb-0'],
+        'layout' => '{items}',
+        'columns' => [
+            [
+                'label' => 'Técnico',
+                'value' => fn($model) => Html::encode($model->tecnico?->nombre ?? 'N/A'),
+            ],
+            [
+                'label' => 'Especialidad',
+                'value' => fn($model) => Html::encode($model->tecnico?->especialidad?->nombre ?? 'N/A'),
+            ],
+            [
+                'label' => 'Asignado',
+                'value' => fn($model) => $model->asignado_at ? date('d/m/Y H:i', $model->asignado_at) : 'N/A',
+            ],
+            [
+                'class' => 'yii\grid\ActionColumn',
+                'template' => '{remove}',
+                'buttons' => [
+                    'remove' => fn($url, $model) => Html::a(
+                        '<i class="bi bi-x"></i>',
+                        '#',
+                        ['class' => 'btn btn-sm btn-danger']
+                    ),
+                ],
+                'contentOptions' => ['class' => 'text-end'],
+            ],
+        ],
+    ]); ?>
 <?php endif ?>

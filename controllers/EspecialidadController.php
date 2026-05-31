@@ -10,6 +10,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\Response;
+use yii\data\ActiveDataProvider;
 use app\models\Especialidad;
 use app\models\User;
 use app\components\behaviors\AccessControlBehavior;
@@ -67,8 +68,12 @@ class EspecialidadController extends BaseController
     /** Listado de especialidades. */
     public function actionIndex(): string
     {
-        $especialidades = Especialidad::find()->orderBy('nombre')->all();
-        return $this->render('index', ['especialidades' => $especialidades]);
+        $dataProvider = new ActiveDataProvider([
+            'query' => Especialidad::find()->orderBy('nombre'),
+            'pagination' => ['pageSize' => 20],
+        ]);
+
+        return $this->render('index', ['dataProvider' => $dataProvider]);
     }
 
     /** Formulario de creación. */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace app\controllers;
 
 use Yii;
+use yii\data\ArrayDataProvider;
 use yii\filters\AccessControl;
 use yii\web\Response;
 use app\components\services\NotificacionService;
@@ -58,9 +59,19 @@ class RecordatorioCitaController extends BaseController
             ->where(['codigo' => 'cita.recordatorio_24h', 'activo' => 1])
             ->exists();
 
+        $citasMananaProvider = new ArrayDataProvider([
+            'allModels' => $citasManana,
+            'pagination' => false,
+        ]);
+
+        $citasHoyProvider = new ArrayDataProvider([
+            'allModels' => $citasHoy,
+            'pagination' => false,
+        ]);
+
         return $this->render('index', [
-            'citasManana' => $citasManana,
-            'citasHoy' => $citasHoy,
+            'citasMananaProvider' => $citasMananaProvider,
+            'citasHoyProvider' => $citasHoyProvider,
             'totalRecordatoriosEnviados' => $totalRecordatoriosEnviados,
             'totalPendientes' => $totalPendientes,
             'plantillaExiste' => $plantillaExiste,

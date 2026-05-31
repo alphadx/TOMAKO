@@ -2,6 +2,8 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 use app\models\OrdenCompra;
 use app\models\OrdenCompraItem;
 
@@ -99,66 +101,80 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
         <?php if ($model->items && count($model->items) > 0): ?>
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Descripción</th>
-                        <th>Cantidad</th>
-                        <th>Recibida</th>
-                        <th>Pendiente</th>
-                        <th>Precio Unit.</th>
-                        <th>Subtotal</th>
-                        <th>% Recibido</th>
-                        <?php if ($model->estado === OrdenCompra::ESTADO_BORRADOR): ?>
-                            <th>Acciones</th>
-                        <?php endif; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($model->items as $index => $item): ?>
-                        <tr>
-                            <td><?= $index + 1 ?></td>
-                            <td><?= Html::encode($item->descripcion) ?></td>
-                            <td><?= $item->cantidad ?></td>
-                            <td>
-                                <span class="badge bg-<?= $item->esRecibidoCompleto() ? 'success' : ($item->esRecibidoParcial() ? 'info' : 'secondary') ?>">
-                                    <?= $item->cantidad_recibida ?>
-                                </span>
-                            </td>
-                            <td><?= $item->getCantidadPendiente() ?></td>
-                            <td>$<?= number_format((float)$item->precio_unitario, 0, ',', '.') ?></td>
-                            <td>$<?= number_format((float)$item->subtotal, 0, ',', '.') ?></td>
-                            <td>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-<?= $item->esRecibidoCompleto() ? 'success' : 'warning' ?>" 
-                                         role="progressbar" 
-                                         style="width: <?= $item->getPorcentajeRecibido() ?>%;" 
-                                         aria-valuenow="<?= $item->getPorcentajeRecibido() ?>" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
-                                        <?= $item->getPorcentajeRecibido() ?>%
-                                    </div>
-                                </div>
-                            </td>
-                            <?php if ($model->estado === OrdenCompra::ESTADO_BORRADOR): ?>
-                                <td>
-                                    <?= Html::a('<i class="fas fa-trash"></i>', ['eliminar-item', 'id' => $item->id], [
-                                        'class' => 'btn btn-sm btn-outline-danger',
-                                        'data-confirm' => '¿Eliminar este item?',
-                                    ]) ?>
-                                </td>
-                            <?php endif; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="6" class="text-end">Total:</th>
-<th colspan="2"><strong>$<?= number_format((float)$model->total_monto, 0, ',', '.') ?></strong></th>
-                    </tr>
-                </tfoot>
-            </table>
+            <?php
+            $itemsProvider = new ArrayDataProvider([
+                'allModels' => $model->items,
+                'pagination' => false,
+            ]);
+
+            $columns = [
+                ['class' => 'yii\grid\SerialColumn'],
+                [
+                    'label' => 'Descripción',
+                    'attribute' => 'descripcion',
+                ],
+                [
+                    'label' => 'Cantidad',
+                    'attribute' => 'cantidad',
+                ],
+                [
+                    'label' => 'Recibida',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        $cls = $model->esRecibidoCompleto() ? 'bg-success' : ($model->esRecibidoParcial() ? 'bg-info' : 'bg-secondary');
+                        return '<span class="badge ' . $cls . '">' . $model->cantidad_recibida . '</span>';
+                    },
+                ],
+                [
+                    'label' => 'Pendiente',
+                    'value' => fn($model) => $model->getCantidadPendiente(),
+                ],
+                [
+                    'label' => 'Precio Unit.',
+                    'value' => fn($model) => '$' . number_format((float)$model->precio_unitario, 0, ',', '.'),
+                ],
+                [
+                    'label' => 'Subtotal',
+                    'value' => fn($model) => '$' . number_format((float)$model->subtotal, 0, ',', '.'),
+                ],
+                [
+                    'label' => '% Recibido',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        $pct = $model->getPorcentajeRecibido();
+                        $cls = $model->esRecibidoCompleto() ? 'success' : 'warning';
+                        return '<div class="progress" style="height: 20px;">'
+                            . '<div class="progress-bar bg-' . $cls . '" role="progressbar" style="width: ' . $pct . '%;" '
+                            . 'aria-valuenow="' . $pct . '" aria-valuemin="0" aria-valuemax="100">'
+                            . $pct . '%</div></div>';
+                    },
+                ],
+            ];
+
+            if ($model->estado === OrdenCompra::ESTADO_BORRADOR) {
+                $columns[] = [
+                    'class' => 'yii\grid\ActionColumn',
+                    'template' => '{delete}',
+                    'buttons' => [
+                        'delete' => fn($url, $model) => Html::a(
+                            '<i class="fas fa-trash"></i>',
+                            ['eliminar-item', 'id' => $model->id],
+                            ['class' => 'btn btn-sm btn-outline-danger', 'data-confirm' => '¿Eliminar este item?']
+                        ),
+                    ],
+                ];
+            }
+            ?>
+            <?= GridView::widget([
+                'dataProvider' => $itemsProvider,
+                'tableOptions' => ['class' => 'table table-bordered table-striped mb-0'],
+                'layout' => '{items}',
+                'columns' => $columns,
+            ]) ?>
+            <div class="d-flex justify-content-end mt-2">
+                <strong class="me-2">Total:</strong>
+                <strong>$<?= number_format((float)$model->total_monto, 0, ',', '.') ?></strong>
+            </div>
         <?php else: ?>
             <div class="alert alert-info">Esta orden no tiene items. Agregue items antes de enviar.</div>
         <?php endif; ?>

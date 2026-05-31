@@ -6,7 +6,7 @@
  */
 
 use yii\helpers\Html;
-use yii\widgets\ListView;
+use yii\grid\GridView;
 use app\models\Seguimiento;
 
 ?>
@@ -42,106 +42,90 @@ use app\models\Seguimiento;
         <?php endif; ?>
     </div>
 
-    <?php
-    $seguimientos = $seguimientosProvider->getModels();
-    ?>
-
-    <?php if (empty($seguimientos)): ?>
+    <?php if ($seguimientosProvider->getTotalCount() === 0): ?>
         <div class="alert alert-info">
             <i class="fas fa-info-circle"></i> No hay seguimientos registrados para esta orden.
         </div>
     <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-hover table-sm">
-                <thead>
-                    <tr>
-                        <th>Tipo</th>
-                        <th>Estado</th>
-                        <th>Fecha Programada</th>
-                        <th>Fecha Realización</th>
-                        <th>Satisfacción</th>
-                        <th>Realizado Por</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($seguimientos as $seguimiento): ?>
-                        <tr class="<?= $seguimiento->isPendiente() ? 'table-warning' : '' ?>">
-                            <td>
-                                <span class="badge badge-secondary">
-                                    <?= Html::encode($seguimiento->tipoLabel) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <?php
-                                $estadoClass = match($seguimiento->estado) {
-                                    'pendiente' => 'badge-warning',
-                                    'completado' => 'badge-success',
-                                    'omitido' => 'badge-secondary',
-                                    'fallido' => 'badge-danger',
-                                    default => 'badge-secondary',
-                                };
-                                ?>
-                                <span class="badge <?= $estadoClass ?>">
-                                    <?= Html::encode($seguimiento->estadoLabel) ?>
-                                </span>
-                            </td>
-                            <td><?= date('d/m/Y H:i', $seguimiento->fecha_programada) ?></td>
-                            <td>
-                                <?= $seguimiento->fecha_realizacion 
-                                    ? date('d/m/Y H:i', $seguimiento->fecha_realizacion) 
-                                    : '-' 
-                                ?>
-                            </td>
-                            <td>
-                                <?php if ($seguimiento->satisfaccion !== null): ?>
-                                    <div class="rating-stars">
-                                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                                            <i class="fas fa-star <?= $i <= $seguimiento->satisfaccion ? 'text-warning' : 'text-muted' ?>"></i>
-                                        <?php endfor; ?>
-                                    </div>
-                                    <small class="text-muted">(NPS: <?= number_format((float)($seguimiento->nps_score ?? 0), 1) ?>)</small>
-                                <?php else: ?>
-                                    <span class="text-muted">-</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?= $seguimiento->realizadoPor 
-                                    ? Html::encode($seguimiento->realizadoPor->nombre_completo) 
-                                    : '<em class="text-muted">No asignado</em>' 
-                                ?>
-                            </td>
-                            <td>
-                                <?php if ($seguimiento->isPendiente()): ?>
-                                    <?= Html::a(
-                                        '<i class="fas fa-check"></i>',
-                                        ['seguimiento/update', 'id' => $seguimiento->id],
-                                        [
-                                            'class' => 'btn btn-sm btn-success',
-                                            'title' => 'Completar seguimiento',
-                                        ]
-                                    ) ?>
-                                <?php endif; ?>
-                                
-                                <?= Html::a(
-                                    '<i class="fas fa-eye"></i>',
-                                    ['seguimiento/view', 'id' => $seguimiento->id],
-                                    [
-                                        'class' => 'btn btn-sm btn-info',
-                                        'title' => 'Ver detalle',
-                                    ]
-                                ) ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <?= \yii\widgets\LinkPager::widget([
-            'pagination' => $seguimientosProvider->getPagination(),
-            'options' => ['class' => 'pagination pagination-sm'],
-        ]) ?>
+        <?= GridView::widget([
+            'dataProvider' => $seguimientosProvider,
+            'tableOptions' => ['class' => 'table table-hover table-sm mb-0'],
+            'layout' => '{items}{pager}',
+            'pager' => [
+                'class' => \yii\widgets\LinkPager::class,
+                'options' => ['class' => 'pagination pagination-sm justify-content-center mt-3'],
+            ],
+            'rowOptions' => fn($model) => $model->isPendiente() ? ['class' => 'table-warning'] : [],
+            'columns' => [
+                [
+                    'label' => 'Tipo',
+                    'format' => 'raw',
+                    'value' => fn($model) => '<span class="badge bg-secondary">' . Html::encode($model->tipoLabel) . '</span>',
+                ],
+                [
+                    'label' => 'Estado',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        $estadoClass = match($model->estado) {
+                            'pendiente' => 'bg-warning text-dark',
+                            'completado' => 'bg-success',
+                            'omitido' => 'bg-secondary',
+                            'fallido' => 'bg-danger',
+                            default => 'bg-secondary',
+                        };
+                        return '<span class="badge ' . $estadoClass . '">' . Html::encode($model->estadoLabel) . '</span>';
+                    },
+                ],
+                [
+                    'label' => 'Fecha Programada',
+                    'value' => fn($model) => date('d/m/Y H:i', $model->fecha_programada),
+                ],
+                [
+                    'label' => 'Fecha Realización',
+                    'value' => fn($model) => $model->fecha_realizacion ? date('d/m/Y H:i', $model->fecha_realizacion) : '-',
+                ],
+                [
+                    'label' => 'Satisfacción',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        if ($model->satisfaccion === null) {
+                            return '<span class="text-muted">-</span>';
+                        }
+                        $stars = '';
+                        for ($i = 1; $i <= 5; $i++) {
+                            $stars .= '<i class="fas fa-star ' . ($i <= $model->satisfaccion ? 'text-warning' : 'text-muted') . '" style="font-size:0.9rem"></i>';
+                        }
+                        $nps = number_format((float)($model->nps_score ?? 0), 1);
+                        return '<div class="rating-stars">' . $stars . '</div><small class="text-muted">(NPS: ' . $nps . ')</small>';
+                    },
+                ],
+                [
+                    'label' => 'Realizado Por',
+                    'format' => 'raw',
+                    'value' => fn($model) => $model->realizadoPor
+                        ? Html::encode($model->realizadoPor->nombre_completo)
+                        : '<em class="text-muted">No asignado</em>',
+                ],
+                [
+                    'class' => 'yii\grid\ActionColumn',
+                    'template' => '{complete} {view}',
+                    'buttons' => [
+                        'complete' => fn($url, $model) => $model->isPendiente()
+                            ? Html::a(
+                                '<i class="fas fa-check"></i>',
+                                ['seguimiento/update', 'id' => $model->id],
+                                ['class' => 'btn btn-sm btn-success', 'title' => 'Completar seguimiento']
+                            )
+                            : '',
+                        'view' => fn($url, $model) => Html::a(
+                            '<i class="fas fa-eye"></i>',
+                            ['seguimiento/view', 'id' => $model->id],
+                            ['class' => 'btn btn-sm btn-info', 'title' => 'Ver detalle']
+                        ),
+                    ],
+                ],
+            ],
+        ]); ?>
     <?php endif; ?>
 </div>
 

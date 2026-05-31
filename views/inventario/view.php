@@ -5,6 +5,8 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\widgets\ActiveForm;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 use app\models\InventoryMovement;
 
 $this->title = $model->nombre;
@@ -115,43 +117,55 @@ $estadoLabels = ['sin_stock' => 'Sin Stock', 'bajo' => 'Stock Bajo', 'en_stock' 
     <div class="card shadow-sm mt-3">
         <div class="card-header"><strong><i class="bi bi-clock-history me-2"></i>Historial de Movimientos</strong></div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Tipo</th>
-                            <th>Cantidad</th>
-                            <th>Anterior</th>
-                            <th>Nuevo</th>
-                            <th>Referencia</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($model->movimientos as $mov): ?>
-                        <tr>
-                            <td><?= $mov->created_at ? date('d/m/Y H:i', $mov->created_at) : '—' ?></td>
-                            <td>
-                                <?php
-                                $cls = match ($mov->tipo) { 'entrada' => 'success', 'salida' => 'danger', default => 'warning' };
-                                $lbl = match ($mov->tipo) { 'entrada' => 'Entrada', 'salida' => 'Salida', default => 'Ajuste' };
-                                ?>
-                                <span class="badge bg-<?= $cls ?>"><?= $lbl ?></span>
-                            </td>
-                            <td class="fw-bold <?= $mov->cantidad_delta >= 0 ? 'text-success' : 'text-danger' ?>">
-                                <?= ($mov->cantidad_delta >= 0 ? '+' : '') . $mov->cantidad_delta ?>
-                            </td>
-                            <td><?= $mov->cantidad_anterior ?></td>
-                            <td><?= $mov->cantidad_nueva ?></td>
-                            <td><?= Html::encode($mov->referencia ?? '—') ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <?php if (empty($model->movimientos)): ?>
-                        <tr><td colspan="6" class="text-center text-muted py-3">Sin movimientos registrados.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+            <?php
+            $movimientosProvider = new ArrayDataProvider([
+                'allModels' => $model->movimientos,
+                'pagination' => false,
+            ]);
+            ?>
+            <?= GridView::widget([
+                'dataProvider' => $movimientosProvider,
+                'tableOptions' => ['class' => 'table table-sm table-striped mb-0'],
+                'headerRowOptions' => ['class' => 'table-dark'],
+                'layout' => '{items}',
+                'emptyText' => 'Sin movimientos registrados.',
+                'columns' => [
+                    [
+                        'label' => 'Fecha',
+                        'value' => fn($model) => $model->created_at ? date('d/m/Y H:i', $model->created_at) : '—',
+                    ],
+                    [
+                        'label' => 'Tipo',
+                        'format' => 'raw',
+                        'value' => function ($model) {
+                            $cls = match ($model->tipo) { 'entrada' => 'bg-success', 'salida' => 'bg-danger', default => 'bg-warning' };
+                            $lbl = match ($model->tipo) { 'entrada' => 'Entrada', 'salida' => 'Salida', default => 'Ajuste' };
+                            return '<span class="badge ' . $cls . '">' . $lbl . '</span>';
+                        },
+                    ],
+                    [
+                        'label' => 'Cantidad',
+                        'format' => 'raw',
+                        'value' => function ($model) {
+                            $sign = $model->cantidad_delta >= 0 ? '+' : '';
+                            $cls = $model->cantidad_delta >= 0 ? 'text-success' : 'text-danger';
+                            return '<span class="fw-bold ' . $cls . '">' . $sign . $model->cantidad_delta . '</span>';
+                        },
+                    ],
+                    [
+                        'label' => 'Anterior',
+                        'attribute' => 'cantidad_anterior',
+                    ],
+                    [
+                        'label' => 'Nuevo',
+                        'attribute' => 'cantidad_nueva',
+                    ],
+                    [
+                        'label' => 'Referencia',
+                        'value' => fn($model) => Html::encode($model->referencia ?? '—'),
+                    ],
+                ],
+            ]); ?>
         </div>
     </div>
 </div>

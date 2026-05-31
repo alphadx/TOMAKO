@@ -5,6 +5,8 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
+use yii\grid\GridView;
+use yii\data\ArrayDataProvider;
 use app\models\OrdenServicio;
 use app\components\services\PagoService;
 
@@ -82,29 +84,51 @@ foreach ($todos as $e) {
                 <?php if (empty($model->detalles)): ?>
                     <div class="card-body text-muted text-center">Sin servicios registrados.</div>
                 <?php else: ?>
+                    <?php
+                    $detallesProvider = new ArrayDataProvider([
+                        'allModels' => $model->detalles,
+                        'pagination' => false,
+                    ]);
+                    ?>
+                    <?= GridView::widget([
+                        'dataProvider' => $detallesProvider,
+                        'tableOptions' => ['class' => 'table table-sm table-striped mb-0'],
+                        'headerRowOptions' => ['class' => 'table-dark'],
+                        'layout' => '{items}',
+                        'columns' => [
+                            [
+                                'label' => 'Servicio',
+                                'format' => 'raw',
+                                'value' => function ($d) {
+                                    $name = Html::encode($d->servicio ? $d->servicio->nombre : "Svc #{$d->servicio_id}");
+                                    if (!empty($d->nota)) {
+                                        $name .= '<small class="text-muted d-block"><i class="bi bi-sticky me-1"></i>' . Html::encode($d->nota) . '</small>';
+                                    }
+                                    return $name;
+                                },
+                            ],
+                            [
+                                'attribute' => 'cantidad',
+                                'contentOptions' => ['class' => 'text-center'],
+                                'headerOptions' => ['class' => 'text-center'],
+                            ],
+                            [
+                                'label' => 'P. Unit.',
+                                'value' => fn($d) => '$ ' . number_format((float)$d->precio_unitario, 0, ',', '.'),
+                                'contentOptions' => ['class' => 'text-end'],
+                                'headerOptions' => ['class' => 'text-end'],
+                            ],
+                            [
+                                'label' => 'Subtotal',
+                                'value' => fn($d) => '$ ' . number_format((float)$d->subtotal, 0, ',', '.'),
+                                'contentOptions' => ['class' => 'text-end fw-bold'],
+                                'headerOptions' => ['class' => 'text-end'],
+                            ],
+                        ],
+                    ]) ?>
                     <div class="table-responsive">
-                        <table class="table table-sm table-striped mb-0">
-                            <thead class="table-dark">
-                                <tr><th>Servicio</th><th class="text-center">Cantidad</th><th class="text-end">P. Unit.</th><th class="text-end">Subtotal</th></tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($model->detalles as $d): ?>
-                                <tr>
-                                    <td>
-                                        <?= Html::encode($d->servicio ? $d->servicio->nombre : "Svc #{$d->servicio_id}") ?>
-                                        <?php if (!empty($d->nota)): ?>
-                                            <small class="text-muted d-block"><i class="bi bi-sticky me-1"></i><?= Html::encode($d->nota) ?></small>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="text-center"><?= $d->cantidad ?></td>
-                                    <td class="text-end">$ <?= number_format((float)$d->precio_unitario, 0, ',', '.') ?></td>
-                                    <td class="text-end fw-bold">$ <?= number_format((float)$d->subtotal, 0, ',', '.') ?></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                            <tfoot class="table-secondary">
-<tr><td colspan="3" class="text-end fw-bold">Total</td><td class="text-end fw-bold">$ <?= number_format((float)$model->total, 0, ',', '.') ?></td></tr>
-                            </tfoot>
+                        <table class="table table-sm mb-0 table-secondary">
+                            <tr><td class="text-end fw-bold">Total</td><td class="text-end fw-bold">$ <?= number_format((float)$model->total, 0, ',', '.') ?></td></tr>
                         </table>
                     </div>
                 <?php endif; ?>

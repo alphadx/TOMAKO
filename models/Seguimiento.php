@@ -225,7 +225,7 @@ class Seguimiento extends ActiveRecord
     /**
      * Crea un seguimiento automático para una orden entregada
      */
-    public static function crearParaOrden(OrdenServicio $orden, int $diasDespues = null): self
+    public static function crearParaOrden(OrdenServicio $orden, ?int $diasDespues = null): self
     {
         $dias = $diasDespues ?? self::DIAS_SEGUIMIENTO_DEFAULT;
         $fechaProgramada = strtotime("+{$dias} days", $orden->closed_at ?? time());

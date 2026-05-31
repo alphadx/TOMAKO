@@ -234,7 +234,7 @@ class ServicioController extends BaseController
     /**
      * Listado de plantillas de checklist por servicio
      */
-    public function actionPlantillasIndex(int $servicioId = null): string
+    public function actionPlantillasIndex(?int $servicioId = null): string
     {
         $searchModel = new PlantillaChecklistSearch();
         $params = Yii::$app->request->queryParams;
@@ -265,7 +265,7 @@ class ServicioController extends BaseController
     /**
      * Crear nueva plantilla de checklist
      */
-    public function actionPlantillasCreate(int $servicioId = null): Response|string
+    public function actionPlantillasCreate(?int $servicioId = null): Response|string
     {
         $this->requireAdminOrOperador();
         

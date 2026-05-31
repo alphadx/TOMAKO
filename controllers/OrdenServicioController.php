@@ -699,7 +699,7 @@ class OrdenServicioController extends Controller
      * Reporte de cumplimiento de checklists
      * HU-028
      */
-    public function actionReporteChecklist(string $fechaDesde = null, string $fechaHasta = null): string
+    public function actionReporteChecklist(?string $fechaDesde = null, ?string $fechaHasta = null): string
     {
         // Por defecto, último mes
         if (!$fechaDesde) {

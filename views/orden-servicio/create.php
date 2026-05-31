@@ -13,7 +13,11 @@ $this->title = 'Nueva Orden de Servicio';
 $this->params['breadcrumbs'][] = ['label' => 'Órdenes', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$clientes = Cliente::find()->select(['id', 'nombre'])->asArray()->all();
+$clientesList = Cliente::find()
+    ->select(['nombre', 'id'])
+    ->orderBy(['nombre' => SORT_ASC])
+    ->indexBy('id')
+    ->column();
 $servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray()->all();
 ?>
 
@@ -28,23 +32,15 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray(
                 <div class="card-body">
                     <?php $form = ActiveForm::begin() ?>
 
-                    <!-- Cliente Selection with Search -->
+                    <!-- Cliente Selection -->
                     <div class="mb-3">
                         <label class="form-label">Cliente *</label>
-                        <input
-                            type="text"
-                            id="cliente-search"
-                            class="form-control"
-                            placeholder="Buscar cliente..."
-                            autocomplete="off"
-                        >
-                        <input
-                            type="hidden"
-                            name="cliente_id"
-                            id="cliente_id"
-                            required
-                        >
-                        <div id="cliente-results" class="list-group mt-2"></div>
+                        <?= Html::dropDownList('cliente_id', null, $clientesList, [
+                            'id' => 'cliente_id',
+                            'class' => 'form-control',
+                            'prompt' => 'Seleccione cliente...',
+                            'required' => true,
+                        ]) ?>
                     </div>
 
                     <!-- Vehicle Selection -->
@@ -111,39 +107,18 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray(
 
 <?php
 $this->registerJs(<<<'JS'
-// Dynamic client search
-document.getElementById('cliente-search').addEventListener('input', function(e) {
-    const query = e.target.value;
-    if (query.length < 2) return;
-    
-    fetch(`/api/clientes/search?q=${encodeURIComponent(query)}`)
-        .then(r => r.json())
-        .then(data => {
-            const resultsDiv = document.getElementById('cliente-results');
-            resultsDiv.innerHTML = '';
-            data.forEach(cliente => {
-                const li = document.createElement('a');
-                li.href = '#';
-                li.className = 'list-group-item list-group-item-action';
-                li.textContent = cliente.nombre;
-                li.onclick = (e) => {
-                    e.preventDefault();
-                    document.getElementById('cliente-search').value = cliente.nombre;
-                    document.getElementById('cliente_id').value = cliente.id;
-                    resultsDiv.innerHTML = '';
-                    // Load vehicles for this client
-                    loadVehicles(cliente.id);
-                };
-                resultsDiv.appendChild(li);
-            });
-        });
-});
-
-function loadVehicles(clienteId) {
+// Load vehicles when client is selected
+document.getElementById('cliente_id').addEventListener('change', function() {
+    const clienteId = this.value;
     const vehiculoSelect = document.getElementById('vehiculo_id');
+
+    vehiculoSelect.innerHTML = '<option value="">Seleccione vehículo...</option>';
+
+    if (!clienteId) return;
+
     vehiculoSelect.innerHTML = '<option value="">Cargando...</option>';
-    
-    fetch(`/api/vehiculos/by-cliente?cliente_id=${clienteId}`)
+
+    fetch(`/orden-servicio/vehiculos-by-cliente?cliente_id=${clienteId}`)
         .then(r => r.json())
         .then(data => {
             vehiculoSelect.innerHTML = '<option value="">Seleccione vehículo...</option>';
@@ -153,7 +128,10 @@ function loadVehicles(clienteId) {
                 opt.textContent = `${veh.patente} - ${veh.marca} ${veh.modelo}`;
                 vehiculoSelect.appendChild(opt);
             });
+        })
+        .catch(() => {
+            vehiculoSelect.innerHTML = '<option value="">Error al cargar vehículos</option>';
         });
-}
+});
 JS
 ) ?>

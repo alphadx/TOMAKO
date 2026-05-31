@@ -16,6 +16,7 @@ use app\models\OrdenServicioArchivo;
 use app\models\ChecklistItem;
 use app\models\Seguimiento;
 use app\models\Tecnico;
+use app\models\Vehiculo;
 use app\components\services\OrdenServicioService;
 use app\components\behaviors\AccessControlBehavior;
 use Exception;
@@ -70,6 +71,7 @@ class OrdenServicioController extends Controller
                     'ver-cerrar' => ['get'],
                     'cerrar-orden' => ['post'],
                     'reporte-tecnico' => ['get'],
+                    'vehiculos-by-cliente' => ['get'],
                     'gestionar-checklist' => ['get', 'post'],
                     'actualizar-checklist-item' => ['post'],
                     // HU-002: Kanban
@@ -100,6 +102,7 @@ class OrdenServicioController extends Controller
                     'gestionar-checklist' => 'editar',
                     'actualizar-checklist-item' => 'editar',
                     'reporte-tecnico' => 'ver',
+                    'vehiculos-by-cliente' => 'ver',
                     // HU-002: Kanban
                     'kanban' => 'ver',
                     'actualizar-estado-kanban' => 'editar',
@@ -496,6 +499,27 @@ class OrdenServicioController extends Controller
         }
 
         return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Return vehicles for a given client (AJAX)
+     */
+    public function actionVehiculosByCliente()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $clienteId = (int) Yii::$app->request->get('cliente_id');
+
+        if (!$clienteId) {
+            return [];
+        }
+
+        return Vehiculo::find()
+            ->select(['id', 'patente', 'marca', 'modelo'])
+            ->where(['cliente_id' => $clienteId, 'status' => 1])
+            ->orderBy(['patente' => SORT_ASC])
+            ->asArray()
+            ->all();
     }
 
     /**

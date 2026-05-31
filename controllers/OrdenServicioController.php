@@ -24,7 +24,8 @@ use Exception;
  * OrdenServicioController handles work order operations
  * Routes:
  *  GET    /orden-servicio              index (list)
- *  POST   /orden-servicio              create
+ *  GET    /orden-servicio/create        create (form)
+ *  POST   /orden-servicio/create        create (submit)
  *  GET    /orden-servicio/<id>         view (detail)
  *  POST   /orden-servicio/<id>/cambiar-estado    cambiarEstado
  *  POST   /orden-servicio/<id>/cancelar       cancelar
@@ -61,7 +62,7 @@ class OrdenServicioController extends Controller
                 'actions' => [
                     'index' => ['get'],
                     'view' => ['get'],
-                    'create' => ['post'],
+                    'create' => ['get', 'post'],
                     'cambiar-estado' => ['post'],
                     'cancelar' => ['post'],
                     'asignar-tecnico' => ['post'],

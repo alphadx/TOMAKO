@@ -79,6 +79,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js
                 </div>
                 <div class="card-body text-center">
                     <div id="qr-container" class="d-inline-block mb-2"></div>
+                    <p class="text-muted small mb-1">Puedes imprimir este código para colocarlo en el producto.</p>
                     <p class="text-muted small mb-1">Escanea este código desde el celular para ver este producto.</p>
                     <p class="text-muted small mb-0 font-monospace"><?= Html::encode($model->sku) ?></p>
                 </div>

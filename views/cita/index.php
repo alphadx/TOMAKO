@@ -40,8 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="col-md-2">
                     <?= $form->field($searchModel, 'estado')->dropDownList(
-                        ['' => '— Todos —'] + Cita::getEstadosList(),
-                        ['prompt' => false]
+                        ['' => '— Todos —'] + Cita::getEstadosList()
                     )->label('Estado') ?>
                 </div>
                 <div class="col-md-3">

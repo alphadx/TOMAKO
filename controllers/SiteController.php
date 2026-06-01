@@ -196,7 +196,18 @@ class SiteController extends BaseController
                 if (is_string($returnUrl) && $returnUrl !== '') {
                     $returnHost = parse_url($returnUrl, PHP_URL_HOST);
                     $requestHost = Yii::$app->request->hostName;
-                    if ($returnHost === 'localhost' || ($returnHost !== null && $returnHost !== $requestHost)) {
+                    $returnPath = parse_url($returnUrl, PHP_URL_PATH) ?? '';
+
+                    $isExternalHost = $returnHost === 'localhost'
+                        || ($returnHost !== null && $returnHost !== $requestHost);
+
+                    // Rutas de API/AJAX que nunca deben ser returnUrl (p.ej. polling de notificaciones).
+                    $isApiPath = (bool) preg_match(
+                        '#^/(notificaciones/contador|notificaciones/marcar|notificacion/contador-json|notificacion/marcar)#',
+                        $returnPath
+                    );
+
+                    if ($isExternalHost || $isApiPath) {
                         Yii::$app->user->setReturnUrl(['/site/index']);
                     }
                 }

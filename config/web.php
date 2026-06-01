@@ -68,8 +68,9 @@ $config = [
                 'secure' => getenv('SESSION_COOKIE_SECURE') === 'true',
                 'sameSite' => getenv('SESSION_COOKIE_SAMESITE') ?: 'Strict',
             ],
-            // Mantiene redirecciones de autenticacion relativas al host actual.
-            'loginUrl' => 'login',
+            // Usar formato array para que SIEMPRE se resuelva a /site/login,
+            // independientemente del controlador actual.
+            'loginUrl' => ['/site/login'],
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',

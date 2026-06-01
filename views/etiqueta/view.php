@@ -96,7 +96,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
-                        <?php foreach ($model->clientes->limit(10)->all() as $cliente): ?>
+                        <?php foreach ($model->getClientes()->limit(10)->all() as $cliente): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <?= Html::encode($cliente->nombre) ?>
                                 <?= Html::a(

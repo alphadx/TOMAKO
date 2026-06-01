@@ -7,13 +7,15 @@ use app\models\Proveedor;
 use app\models\search\ProveedorSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
+use app\components\behaviors\AccessControlBehavior;
 
 /**
  * ProveedorController implementa el CRUD para la gestión de proveedores.
  */
-class ProveedorController extends Controller
+class ProveedorController extends BaseController
 {
     /**
      * {@inheritdoc}
@@ -25,14 +27,8 @@ class ProveedorController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['index', 'view'],
                         'allow' => true,
                         'roles' => ['@'],
-                    ],
-                    [
-                        'actions' => ['create', 'update', 'delete'],
-                        'allow' => true,
-                        'roles' => ['admin', 'gerente', 'jefe_taller'],
                     ],
                 ],
             ],
@@ -40,6 +36,18 @@ class ProveedorController extends Controller
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                ],
+            ],
+            'granularAccess' => [
+                'class' => AccessControlBehavior::class,
+                'permisoBase' => 'proveedor',
+                'actionMap' => [
+                    'index' => 'ver',
+                    'view' => 'ver',
+                    'create' => 'crear',
+                    'update' => 'editar',
+                    'delete' => 'eliminar',
+                    'activar' => 'editar',
                 ],
             ],
         ];

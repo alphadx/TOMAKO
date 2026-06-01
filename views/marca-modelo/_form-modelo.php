@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'options' => ['class' => 'needs-validation'],
             ]); ?>
 
-            <?= $form->field($model, 'marca_id')->hiddenInput()->value($marca->id)->label(false) ?>
+            <?= $form->field($model, 'marca_id')->hiddenInput(['value' => $marca->id])->label(false) ?>
 
             <div class="mb-3">
                 <label class="form-label">Marca</label>

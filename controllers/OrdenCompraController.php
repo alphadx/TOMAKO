@@ -10,14 +10,16 @@ use app\models\InventoryItem;
 use app\models\search\OrdenCompraSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\web\Response;
+use app\components\behaviors\AccessControlBehavior;
 
 /**
  * OrdenCompraController implementa el CRUD para la gestión de órdenes de compra.
  */
-class OrdenCompraController extends Controller
+class OrdenCompraController extends BaseController
 {
     /**
      * {@inheritdoc}
@@ -29,14 +31,8 @@ class OrdenCompraController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['index', 'view'],
                         'allow' => true,
                         'roles' => ['@'],
-                    ],
-                    [
-                        'actions' => ['create', 'update', 'delete', 'enviar', 'recibir', 'cancelar', 'agregar-item', 'eliminar-item'],
-                        'allow' => true,
-                        'roles' => ['admin', 'gerente', 'jefe_taller'],
                     ],
                 ],
             ],
@@ -49,6 +45,22 @@ class OrdenCompraController extends Controller
                     'recibir' => ['POST'],
                     'agregar-item' => ['POST'],
                     'eliminar-item' => ['POST'],
+                ],
+            ],
+            'granularAccess' => [
+                'class' => AccessControlBehavior::class,
+                'permisoBase' => 'orden-compra',
+                'actionMap' => [
+                    'index' => 'ver',
+                    'view' => 'ver',
+                    'create' => 'crear',
+                    'update' => 'editar',
+                    'delete' => 'eliminar',
+                    'enviar' => 'editar',
+                    'cancelar' => 'editar',
+                    'recibir' => 'editar',
+                    'agregar-item' => 'editar',
+                    'eliminar-item' => 'editar',
                 ],
             ],
         ];

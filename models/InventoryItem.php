@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace app\models;
 
+use Yii;
 use yii\db\ActiveRecord;
 use app\components\behaviors\AuditBehavior;
 
@@ -21,12 +22,15 @@ use app\components\behaviors\AuditBehavior;
  * @property string      $unidad
  * @property string|null $ubicacion
  * @property string|null $foto_path
+ * @property string|null $qr_code
  * @property int         $status
  * @property int|null    $created_at
  * @property int|null    $updated_at
  *
- * @property-read Categoria           $categoria
- * @property-read InventoryMovement[] $movimientos
+ * @property-read Categoria                $categoria
+ * @property-read InventoryMovement[]      $movimientos
+ * @property-read InventoryItemImage[]     $imagenes
+ * @property-read InventoryItemImage|null  $imagenDefault
  */
 class InventoryItem extends ActiveRecord
 {
@@ -66,6 +70,14 @@ class InventoryItem extends ActiveRecord
         ];
     }
 
+    /**
+     * Genera el codigo QR unico para este producto basado en SKU.
+     */
+    public function generarQrCode(): string
+    {
+        return $this->sku . '-' . strtoupper(Yii::$app->security->generateRandomString(8));
+    }
+
     public function beforeValidate(): bool
     {
         if (!parent::beforeValidate()) {
@@ -74,6 +86,7 @@ class InventoryItem extends ActiveRecord
 
         if ($this->getIsNewRecord() && ($this->sku === null || $this->sku === '')) {
             $this->sku = self::generarSku();
+            $this->qr_code = $this->generarQrCode();
         } elseif ($this->isAttributeChanged('sku', false)) {
             $this->addError('sku', 'El SKU no se puede modificar.');
             return false;
@@ -183,6 +196,22 @@ class InventoryItem extends ActiveRecord
 
     // ── Relaciones ────────────────────────────────────────────────────────────
 
+    /**
+     * Busca un item por su codigo QR.
+     */
+    public static function findByQrCode(string $qrCode): ?self
+    {
+        return static::find()->where(['qr_code' => $qrCode])->one();
+    }
+
+    /**
+     * URL del producto para compartir/escanear QR.
+     */
+    public function getQrUrl(): string
+    {
+        return Yii::$app->urlManager->createUrl(['inventario/view', 'id' => $this->id]);
+    }
+
     public function getCategoria(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Categoria::class, ['id' => 'categoria_id']);
@@ -195,6 +224,25 @@ class InventoryItem extends ActiveRecord
     }
 
     /** Órdenes donde se utilizó este repuesto (HU-013) */
+    /**
+     * Imagenes del producto.
+     */
+    public function getImagenes(): \yii\db\ActiveQuery
+    {
+        return $this->hasMany(InventoryItemImage::class, ['item_id' => 'id'])
+            ->andWhere(['is_active' => 1])
+            ->orderBy(['is_default' => SORT_DESC, 'created_at' => SORT_DESC]);
+    }
+
+    /**
+     * Imagen predefinida del producto.
+     */
+    public function getImagenDefault(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(InventoryItemImage::class, ['item_id' => 'id'])
+            ->andWhere(['is_default' => 1, 'is_active' => 1]);
+    }
+
     public function getOrdenesServicio(): \yii\db\ActiveQuery
     {
         return $this->hasMany(OrdenServicioRepuesto::class, ['repuesto_id' => 'id'])

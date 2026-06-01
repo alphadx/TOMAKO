@@ -3,6 +3,7 @@
 /** @var app\models\InventoryItem $model */
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 use yii\widgets\ActiveForm;
 use yii\grid\GridView;
@@ -14,6 +15,8 @@ $this->params['breadcrumbs'][] = ['label' => 'Inventario', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $estadoLabels = ['sin_stock' => 'Sin Stock', 'bajo' => 'Stock Bajo', 'en_stock' => 'En Stock'];
+
+$this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js', ['position' => \yii\web\View::POS_HEAD]);
 ?>
 
 <div class="inventario-view">
@@ -25,6 +28,7 @@ $estadoLabels = ['sin_stock' => 'Sin Stock', 'bajo' => 'Stock Bajo', 'en_stock' 
             </span>
         </h1>
         <div class="d-flex gap-2">
+            <?= Html::a('<i class="bi bi-qr-code-scan me-1"></i>QR', ['qr-scan'], ['class' => 'btn btn-outline-info btn-sm']) ?>
             <?= Html::a('<i class="bi bi-pencil me-1"></i>Editar', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
             <?php if ($model->status): ?>
                 <?= Html::a('<i class="bi bi-x-circle me-1"></i>Desactivar', ['deactivate', 'id' => $model->id], [

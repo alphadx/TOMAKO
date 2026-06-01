@@ -9,14 +9,19 @@ use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\web\Response;
+use yii\web\UploadedFile;
 use app\models\InventoryItem;
+use app\models\InventoryItemImage;
 use app\models\search\InventoryItemSearch;
 use app\components\services\InventarioService;
 use app\models\User;
 use app\components\behaviors\AccessControlBehavior;
 
 /**
- * InventarioController: gestión de inventario de insumos del taller.
+ * InventarioController: gestion de inventario de insumos del taller.
+ *
+ * Incluye gestion de imagenes de productos (captura, subida, baja, predefinida)
+ * y generacion/busqueda por codigo QR.
  *
  * @author ID3.CL
  * @since 1.0.0
@@ -38,25 +43,33 @@ class InventarioController extends BaseController
             'verbs' => [
                 'class'   => VerbFilter::class,
                 'actions' => [
-                    'deactivate' => ['post'],
-                    'entrada'    => ['post'],
-                    'salida'     => ['post'],
-                    'ajuste'     => ['post'],
+                    'deactivate'        => ['post'],
+                    'entrada'           => ['post'],
+                    'salida'            => ['post'],
+                    'ajuste'            => ['post'],
+                    'upload-image'      => ['post'],
+                    'deactivate-image'  => ['post'],
+                    'set-default-image' => ['post'],
                 ],
             ],
             'granularAccess' => [
                 'class' => AccessControlBehavior::class,
                 'permisoBase' => 'inventario',
                 'actionMap' => [
-                    'index' => 'ver',
-                    'view' => 'ver',
-                    'create' => 'crear',
-                    'update' => 'editar',
-                    'delete' => 'eliminar',
-                    'deactivate' => 'eliminar',
-                    'entrada' => 'editar',
-                    'salida' => 'editar',
-                    'ajuste' => 'editar',
+                    'index'              => 'ver',
+                    'view'               => 'ver',
+                    'create'             => 'crear',
+                    'update'             => 'editar',
+                    'delete'             => 'eliminar',
+                    'deactivate'         => 'eliminar',
+                    'entrada'            => 'editar',
+                    'salida'             => 'editar',
+                    'ajuste'             => 'editar',
+                    'upload-image'       => 'editar',
+                    'deactivate-image'   => 'editar',
+                    'set-default-image'  => 'editar',
+                    'qr-scan'            => 'ver',
+                    'qr-search'          => 'ver',
                 ],
             ],
         ];
@@ -67,7 +80,7 @@ class InventarioController extends BaseController
         /** @var User $identity */
         $identity = Yii::$app->user->identity;
         if (!$identity || !in_array($identity->rol_id, [1, 2], true)) {
-            throw new ForbiddenHttpException(Yii::t('app', 'No tiene permisos para esta acción.'));
+            throw new ForbiddenHttpException(Yii::t('app', 'No tiene permisos para esta accion.'));
         }
     }
 
@@ -87,13 +100,21 @@ class InventarioController extends BaseController
         ]);
     }
 
-    /** Detalle de ítem con historial de movimientos. */
+    /** Detalle de item con historial de movimientos. */
     public function actionView(int $id): string
     {
-        return $this->render('view', ['model' => $this->findModel($id)]);
+        $model = $this->findModel($id);
+        $imagenes = InventoryItemImage::getActiveForItem($id);
+        $imagenDefault = InventoryItemImage::getDefaultForItem($id);
+
+        return $this->render('view', [
+            'model'          => $model,
+            'imagenes'       => $imagenes,
+            'imagenDefault'  => $imagenDefault,
+        ]);
     }
 
-    /** Formulario de creación. */
+    /** Formulario de creacion. */
     public function actionCreate(): Response|string
     {
         $this->requireAdminOrOperador();
@@ -103,7 +124,7 @@ class InventarioController extends BaseController
             $data = Yii::$app->request->post('InventoryItem', []);
             $item = $service->create($data);
             if ($item !== null) {
-                Yii::$app->session->setFlash('success', 'Ítem creado exitosamente.');
+                Yii::$app->session->setFlash('success', 'Item creado exitosamente.');
                 return $this->redirect(['view', 'id' => $item->id]);
             }
             Yii::$app->session->setFlash('error', $service->getPrimerError());
@@ -115,7 +136,7 @@ class InventarioController extends BaseController
         return $this->render('create', ['model' => $model]);
     }
 
-    /** Formulario de edición. */
+    /** Formulario de edicion. */
     public function actionUpdate(int $id): Response|string
     {
         $this->requireAdminOrOperador();
@@ -126,7 +147,7 @@ class InventarioController extends BaseController
             $data    = Yii::$app->request->post('InventoryItem', []);
             $updated = $service->update($item, $data);
             if ($updated !== null) {
-                Yii::$app->session->setFlash('success', 'Ítem actualizado exitosamente.');
+                Yii::$app->session->setFlash('success', 'Item actualizado exitosamente.');
                 return $this->redirect(['view', 'id' => $item->id]);
             }
             Yii::$app->session->setFlash('error', $service->getPrimerError());
@@ -135,14 +156,14 @@ class InventarioController extends BaseController
         return $this->render('update', ['model' => $item]);
     }
 
-    /** Desactiva un ítem (POST). */
+    /** Desactiva un item (POST). */
     public function actionDeactivate(int $id): Response
     {
         $this->requireAdminOrOperador();
         $service = new InventarioService();
 
         if ($service->deactivate($id)) {
-            Yii::$app->session->setFlash('success', 'Ítem desactivado exitosamente.');
+            Yii::$app->session->setFlash('success', 'Item desactivado exitosamente.');
         } else {
             Yii::$app->session->setFlash('error', $service->getPrimerError());
         }
@@ -214,11 +235,211 @@ class InventarioController extends BaseController
         return $this->redirect(['view', 'id' => $id]);
     }
 
+    // ── Imagenes de producto ──────────────────────────────────────────
+
+    /**
+     * Sube una o mas imagenes para un item de inventario.
+     * Soporta subida desde archivo o captura de camara (base64).
+     */
+    public function actionUploadImage(int $id): Response
+    {
+        $this->requireAdminOrOperador();
+        $item = $this->findModel($id);
+        $request = Yii::$app->request;
+
+        // Soporte para imagen base64 desde camara
+        $base64Image = $request->post('base64_image');
+        if ($base64Image) {
+            return $this->handleBase64Upload($item, $base64Image);
+        }
+
+        // Soporte para subida de archivo normal
+        $files = UploadedFile::getInstancesByName('image_files');
+        if (empty($files)) {
+            Yii::$app->session->setFlash('error', 'No se seleccionaron imagenes.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        $uploaded = 0;
+        $isFirstImage = (count($item->imagenes) === 0);
+
+        foreach ($files as $file) {
+            $imagen = new InventoryItemImage();
+            $imagen->item_id = $id;
+            $imagen->imageFile = $file;
+            $imagen->is_default = ($isFirstImage && $uploaded === 0) ? 1 : 0;
+
+            if ($imagen->upload() && $imagen->save()) {
+                $uploaded++;
+            }
+        }
+
+        if ($uploaded > 0) {
+            Yii::$app->session->setFlash('success', "{$uploaded} imagen(es) subida(s) exitosamente.");
+        } else {
+            Yii::$app->session->setFlash('error', 'Error al subir las imagenes.');
+        }
+
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Procesa una imagen capturada desde camara (base64).
+     */
+    private function handleBase64Upload(InventoryItem $item, string $base64Data): Response
+    {
+        // Decodificar base64
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+            $data = substr($base64Data, strpos($base64Data, ',') + 1);
+            $data = base64_decode($data);
+            $ext = strtolower($type[1]);
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'Formato de imagen invalido.');
+            return $this->redirect(['view', 'id' => $item->id]);
+        }
+
+        $dir = InventoryItemImage::getUploadDir();
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        $filename = 'item_' . $item->id . '_' . time() . '_' . Yii::$app->security->generateRandomString(6) . '.' . $ext;
+        $fullPath = $dir . $filename;
+
+        if (file_put_contents($fullPath, $data)) {
+            $imagen = new InventoryItemImage();
+            $imagen->item_id = $item->id;
+            $imagen->filename = 'camara_' . date('Y-m-d_His') . '.' . $ext;
+            $imagen->filepath = $filename;
+            $imagen->is_default = (count($item->imagenes) === 0) ? 1 : 0;
+
+            if ($imagen->save()) {
+                Yii::$app->session->setFlash('success', 'Imagen capturada y guardada exitosamente.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Error al guardar la imagen en la base de datos.');
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'Error al guardar el archivo de imagen.');
+        }
+
+        return $this->redirect(['view', 'id' => $item->id]);
+    }
+
+    /**
+     * Da de baja una imagen de producto (soft delete).
+     */
+    public function actionDeactivateImage(int $imageId): Response
+    {
+        $this->requireAdminOrOperador();
+        $imagen = InventoryItemImage::findOne($imageId);
+
+        if ($imagen === null) {
+            throw new NotFoundHttpException('Imagen no encontrada.');
+        }
+
+        $itemId = $imagen->item_id;
+
+        if ($imagen->deactivate()) {
+            // Si era la predefinida, asignar otra como predefinida
+            if ($imagen->is_default) {
+                $otraImagen = InventoryItemImage::getDefaultForItem($itemId);
+                if ($otraImagen === null) {
+                    $primera = InventoryItemImage::getActiveForItem($itemId);
+                    if (!empty($primera)) {
+                        $primera[0]->setAsDefault();
+                    }
+                }
+            }
+            Yii::$app->session->setFlash('success', 'Imagen dada de baja exitosamente.');
+        } else {
+            Yii::$app->session->setFlash('error', 'Error al dar de baja la imagen.');
+        }
+
+        return $this->redirect(['view', 'id' => $itemId]);
+    }
+
+    /**
+     * Marca una imagen como predefinida.
+     */
+    public function actionSetDefaultImage(int $imageId): Response
+    {
+        $this->requireAdminOrOperador();
+        $imagen = InventoryItemImage::findOne($imageId);
+
+        if ($imagen === null) {
+            throw new NotFoundHttpException('Imagen no encontrada.');
+        }
+
+        $itemId = $imagen->item_id;
+        $imagen->setAsDefault();
+        Yii::$app->session->setFlash('success', 'Imagen marcada como predefinida.');
+
+        return $this->redirect(['view', 'id' => $itemId]);
+    }
+
+    // ── QR Code ──────────────────────────────────────────────────────
+
+    /**
+     * Pagina para escanear QR con la camara del telefono.
+     */
+    public function actionQrScan(): string
+    {
+        return $this->render('qr-scan');
+    }
+
+    /**
+     * Busca un producto por su codigo QR via GET.
+     */
+    public function actionQrSearch(string $qr = ''): Response|string
+    {
+        if ($qr === '') {
+            $qr = Yii::$app->request->get('q', '');
+        }
+
+        if ($qr === '') {
+            return $this->render('qr-search', ['model' => null, 'qr' => '']);
+        }
+
+        $item = InventoryItem::findByQrCode($qr);
+
+        if ($item !== null) {
+            return $this->redirect(['view', 'id' => $item->id]);
+        }
+
+        // Tambien buscar por SKU como fallback
+        $item = InventoryItem::find()->where(['sku' => $qr])->one();
+        if ($item !== null) {
+            return $this->redirect(['view', 'id' => $item->id]);
+        }
+
+        Yii::$app->session->setFlash('warning', "No se encontro un producto con el codigo QR: {$qr}");
+        return $this->render('qr-search', ['model' => null, 'qr' => $qr]);
+    }
+
+    /**
+     * Retorna datos del QR de un item (JSON).
+     */
+    public function actionQrImage(int $id): Response
+    {
+        $item = $this->findModel($id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        return [
+            'sku'     => $item->sku,
+            'qr_code' => $item->qr_code,
+            'url'     => $item->getQrUrl(),
+            'nombre'  => $item->nombre,
+        ];
+    }
+
     private function findModel(int $id): InventoryItem
     {
         $model = InventoryItem::findOne($id);
         if ($model === null) {
-            throw new NotFoundHttpException('Ítem de inventario no encontrado.');
+            throw new NotFoundHttpException('Item de inventario no encontrado.');
         }
         return $model;
     }

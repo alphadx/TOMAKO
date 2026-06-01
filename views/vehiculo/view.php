@@ -157,19 +157,21 @@ $this->params['breadcrumbs'][] = $this->title;
                             </thead>
                             <tbody>
                                 <?php foreach ($ordenes as $orden): ?>
-                                    <?php 
-                                    // Obtener servicios de la orden
-                                    $servicios = $orden->getServicios()->all();
-                                    $tecnico = $orden->tecnico;
+                                    <?php
+                                    // Obtener servicios de la orden a través de los detalles
+                                    $detalles = $orden->detalles;
+                                    // Obtener el primer técnico asignado
+                                    $asignaciones = $orden->asignaciones;
+                                    $tecnico = !empty($asignaciones) ? $asignaciones[0]->tecnico : null;
                                     ?>
                                     <tr>
                                         <td><strong><?= Html::encode($orden->codigo) ?></strong></td>
                                         <td><?= $orden->created_at ? date('d/m/Y', (int) $orden->created_at) : '—' ?></td>
                                         <td>
-                                            <?php if (count($servicios) > 0): ?>
+                                            <?php if (count($detalles) > 0): ?>
                                                 <ul class="list-unstyled mb-0 small">
-                                                    <?php foreach ($servicios as $servicio): ?>
-                                                        <li><span class="badge bg-info"><?= Html::encode($servicio->nombre) ?></span></li>
+                                                    <?php foreach ($detalles as $detalle): ?>
+                                                        <li><span class="badge bg-info"><?= Html::encode($detalle->servicio->nombre ?? '—') ?></span></li>
                                                     <?php endforeach ?>
                                                 </ul>
                                             <?php else: ?>
@@ -185,13 +187,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 <span class="text-muted">—</span>
                                             <?php endif ?>
                                         </td>
-                                        <td>
-                                            <?php if ($orden->km_vehiculo): ?>
-                                                <?= number_format($orden->km_vehiculo, 0, ',', '.') ?> km
-                                            <?php else: ?>
-                                                <span class="text-muted">—</span>
-                                            <?php endif ?>
-                                        </td>
+                                        <td><span class="text-muted">—</span></td>
                                         <td><strong><?= Yii::$app->formatter->asCurrency((float) $orden->total, 'CLP') ?></strong></td>
                                         <td><span class="badge <?= Html::encode($orden->getEstadoBadgeClass()) ?>"><?= Html::encode(\app\models\OrdenServicio::getEstadosList()[$orden->estado] ?? $orden->estado) ?></span></td>
                                         <td><?= Html::a('<i class="bi bi-eye"></i>', ['/orden/view', 'id' => $orden->id], ['class' => 'btn btn-sm btn-outline-primary', 'title' => 'Ver detalle']) ?></td>

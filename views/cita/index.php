@@ -40,9 +40,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="col-md-2">
                     <?= $form->field($searchModel, 'estado')->dropDownList(
-                        Cita::getEstadosList(),
-                        ['multiple' => true, 'size' => 1]
-                    )->label('Estado(s)') ?>
+                        ['' => '— Todos —'] + Cita::getEstadosList(),
+                        ['prompt' => false]
+                    )->label('Estado') ?>
                 </div>
                 <div class="col-md-3">
                     <?= $form->field($searchModel, 'buscar')->textInput(['placeholder' => 'Cliente, vehículo...', 'id' => 'cita-buscar'])->label('Buscar') ?>

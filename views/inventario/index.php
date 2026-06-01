@@ -9,6 +9,7 @@ use yii\grid\GridView;
 use yii\widgets\ActiveForm;
 use app\models\InventoryItem;
 use app\models\Categoria;
+use app\models\InventoryItemImage;
 
 $this->title = 'Inventario';
 $this->params['breadcrumbs'][] = $this->title;
@@ -105,6 +106,17 @@ $this->params['breadcrumbs'][] = $this->title;
         'tableOptions' => ['class' => 'table table-hover table-striped align-middle'],
         'columns'      => [
             ['class' => 'yii\grid\SerialColumn'],
+            [
+                'label'  => 'Foto',
+                'format' => 'raw',
+                'value'  => function ($m) {
+                    $img = InventoryItemImage::getDefaultForItem($m->id);
+                    if ($img) {
+                        return '<img src="' . Html::encode($img->getUrl()) . '" alt="' . Html::encode($m->nombre) . '" style="width:40px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy">';
+                    }
+                    return '<span class="text-muted"><i class="bi bi-image" style="font-size:1.4rem;"></i></span>';
+                },
+            ],
             [
                 'label'   => 'SKU',
                 'format'  => 'raw',

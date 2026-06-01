@@ -11,7 +11,6 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 
-$uploadUrl = Url::to(['inventario/upload-image', 'id' => $model->id]);
 $deactivateUrl = Url::to(['inventario/deactivate-image']);
 $setDefaultUrl = Url::to(['inventario/set-default-image']);
 $csrfParam = Yii::$app->request->csrfParam;
@@ -41,7 +40,7 @@ $csrfToken = Yii::$app->request->csrfToken;
             <!-- Miniaturas -->
             <div class="d-flex flex-wrap gap-2 justify-content-center mb-3" id="galeria-miniaturas">
                 <?php foreach ($imagenes as $img): ?>
-                    <div class="position-relative <?= $img->is_default ? 'border border-2 border-primary rounded' : '' ?>" 
+                    <div class="position-relative <?= ($imagenDefault && $img->id === $imagenDefault->id) ? 'border border-2 border-primary rounded' : '' ?>" 
                          style="width: 80px; height: 80px;"
                          id="thumb-<?= $img->id ?>">
                         <img src="<?= $img->getUrl() ?>" 
@@ -51,7 +50,7 @@ $csrfToken = Yii::$app->request->csrfToken;
                              onclick="cambiarImagenPrincipal('<?= $img->getUrl() ?>', <?= $img->id ?>)"
                              loading="lazy">
                         
-                        <?php if ($img->is_default): ?>
+                        <?php if ($imagenDefault && $img->id === $imagenDefault->id): ?>
                             <span class="position-absolute top-0 start-0 badge bg-primary" style="font-size: 0.6rem;">
                                 <i class="bi bi-star-fill"></i>
                             </span>
@@ -59,7 +58,7 @@ $csrfToken = Yii::$app->request->csrfToken;
 
                         <!-- Botones de acción -->
                         <div class="position-absolute top-0 end-0 d-flex gap-0">
-                            <?php if (!$img->is_default): ?>
+                            <?php if (!$imagenDefault || $img->id !== $imagenDefault->id): ?>
                                 <button type="button" 
                                         class="btn btn-sm btn-warning p-0 px-1" 
                                         style="font-size: 0.6rem;"
@@ -86,74 +85,30 @@ $csrfToken = Yii::$app->request->csrfToken;
             </div>
         <?php endif; ?>
 
-        <!-- Formulario de subida de archivos -->
+        <!-- Formulario unificado de subida -->
         <hr>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="card border-dashed">
-                    <div class="card-body text-center">
-                        <h6 class="card-title"><i class="bi bi-upload me-1"></i>Subir desde archivo</h6>
-                        <?php $form = ActiveForm::begin([
-                            'action' => ['inventario/upload-image', 'id' => $model->id],
-                            'method' => 'post',
-                            'options' => ['enctype' => 'multipart/form-data', 'id' => 'upload-form'],
-                        ]); ?>
-                            <div class="mb-2">
-                                <input type="file" 
-                                       name="image_files[]" 
-                                       class="form-control form-control-sm" 
-                                       accept="image/*" 
-                                       multiple
-                                       id="file-input"
-                                       onchange="previewFiles(this)">
-                            </div>
-                            <div id="file-preview" class="d-flex flex-wrap gap-1 mb-2 justify-content-center"></div>
-                            <button type="submit" class="btn btn-outline-primary btn-sm w-100" id="btn-upload" style="display:none;">
-                                <i class="bi bi-cloud-upload me-1"></i>Subir Imágenes
-                            </button>
-                        <?php ActiveForm::end(); ?>
-                    </div>
-                </div>
+        <?php $form = ActiveForm::begin([
+            'action' => ['inventario/upload-image', 'id' => $model->id],
+            'method' => 'post',
+            'options' => ['enctype' => 'multipart/form-data', 'id' => 'upload-form'],
+        ]); ?>
+            <div class="text-center">
+                <label for="file-input" class="btn btn-outline-primary btn-sm mb-2" style="cursor:pointer;">
+                    <i class="bi bi-camera me-1"></i>Seleccionar o tomar foto(s)
+                </label>
+                <input type="file"
+                       name="image_files[]"
+                       class="d-none"
+                       accept="image/*"
+                       multiple
+                       id="file-input"
+                       onchange="previewFiles(this)">
+                <div id="file-preview" class="d-flex flex-wrap gap-2 mb-2 justify-content-center"></div>
+                <button type="submit" class="btn btn-primary btn-sm" id="btn-upload" style="display:none;">
+                    <i class="bi bi-cloud-upload me-1"></i>Subir Imágenes
+                </button>
             </div>
-
-            <div class="col-md-6">
-                <div class="card border-dashed">
-                    <div class="card-body text-center">
-                        <h6 class="card-title"><i class="bi bi-camera me-1"></i>Capturar con cámara</h6>
-                        <p class="text-muted small mb-2">Usa la cámara de tu teléfono o computador</p>
-                        
-                        <div id="camera-container" style="display:none;">
-                            <video id="camera-preview" autoplay playsinline 
-                                   class="img-fluid rounded mb-2"
-                                   style="max-height: 200px;"></video>
-                            <canvas id="camera-canvas" style="display:none;"></canvas>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <button type="button" class="btn btn-success btn-sm" onclick="capturePhoto()">
-                                    <i class="bi bi-camera-fill me-1"></i>Capturar
-                                </button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="stopCamera()">
-                                    <i class="bi bi-x-circle me-1"></i>Cancelar
-                                </button>
-                            </div>
-                        </div>
-                        <div id="captured-preview" style="display:none;">
-                            <img id="captured-image" class="img-fluid rounded mb-2" style="max-height: 200px;">
-                            <div class="d-flex gap-2 justify-content-center">
-                                <button type="button" class="btn btn-primary btn-sm" onclick="uploadCapturedPhoto()">
-                                    <i class="bi bi-check-circle me-1"></i>Guardar
-                                </button>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="retakePhoto()">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Tomar otra
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-outline-success btn-sm w-100" id="btn-camera" onclick="startCamera()">
-                            <i class="bi bi-camera-video me-1"></i>Abrir Cámara
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php ActiveForm::end(); ?>
     </div>
 </div>
 
@@ -214,58 +169,6 @@ function previewFiles(input) {
     }
 }
 
-var cameraStream = null;
-
-async function startCamera() {
-    try {
-        var constraints = { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } };
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        var video = document.getElementById('camera-preview');
-        video.srcObject = cameraStream;
-        document.getElementById('camera-container').style.display = 'block';
-        document.getElementById('btn-camera').style.display = 'none';
-    } catch (err) {
-        alert('No se pudo acceder a la camara: ' + err.message);
-    }
-}
-
-function stopCamera() {
-    if (cameraStream) { cameraStream.getTracks().forEach(function(t) { t.stop(); }); cameraStream = null; }
-    document.getElementById('camera-container').style.display = 'none';
-    document.getElementById('captured-preview').style.display = 'none';
-    document.getElementById('btn-camera').style.display = 'block';
-}
-
-function capturePhoto() {
-    var video = document.getElementById('camera-preview');
-    var canvas = document.getElementById('camera-canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    document.getElementById('captured-image').src = canvas.toDataURL('image/jpeg', 0.85);
-    document.getElementById('camera-container').style.display = 'none';
-    document.getElementById('captured-preview').style.display = 'block';
-}
-
-function retakePhoto() {
-    document.getElementById('captured-preview').style.display = 'none';
-    document.getElementById('camera-container').style.display = 'block';
-}
-
-async function uploadCapturedPhoto() {
-    var canvas = document.getElementById('camera-canvas');
-    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    var formData = new FormData();
-    formData.append('base64_image', dataUrl);
-    formData.append('{$csrfParam}', '{$csrfToken}');
-    try {
-        var response = await fetch('{$uploadUrl}', { method: 'POST', body: formData });
-        if (response.ok) { window.location.reload(); }
-        else { alert('Error al subir la imagen.'); }
-    } catch (err) { alert('Error de red: ' + err.message); }
-}
-
-window.addEventListener('beforeunload', stopCamera);
 JS;
 $this->registerJs($js);
 ?>

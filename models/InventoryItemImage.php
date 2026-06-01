@@ -197,11 +197,24 @@ class InventoryItemImage extends ActiveRecord
 
     /**
      * Obtiene la imagen predefinida de un item.
+     * Si no hay ninguna marcada explícitamente como predefinida,
+     * retorna la primera imagen activa (fallback automático).
      */
     public static function getDefaultForItem(int $itemId): ?self
     {
-        return static::find()
+        // Buscar imagen marcada explícitamente como predefinida
+        $default = static::find()
             ->where(['item_id' => $itemId, 'is_default' => 1, 'is_active' => 1])
+            ->one();
+
+        if ($default !== null) {
+            return $default;
+        }
+
+        // Fallback: primera imagen activa ordenada por fecha de creación
+        return static::find()
+            ->where(['item_id' => $itemId, 'is_active' => 1])
+            ->orderBy(['created_at' => SORT_ASC])
             ->one();
     }
 

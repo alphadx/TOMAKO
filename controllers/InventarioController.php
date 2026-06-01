@@ -340,14 +340,11 @@ class InventarioController extends BaseController
         $itemId = $imagen->item_id;
 
         if ($imagen->deactivate()) {
-            // Si era la predefinida, asignar otra como predefinida
+            // Si era la predefinida, asignar la primera activa como nueva predefinida
             if ($imagen->is_default) {
-                $otraImagen = InventoryItemImage::getDefaultForItem($itemId);
-                if ($otraImagen === null) {
-                    $primera = InventoryItemImage::getActiveForItem($itemId);
-                    if (!empty($primera)) {
-                        $primera[0]->setAsDefault();
-                    }
+                $primera = InventoryItemImage::getActiveForItem($itemId);
+                if (!empty($primera)) {
+                    $primera[0]->setAsDefault();
                 }
             }
             Yii::$app->session->setFlash('success', 'Imagen dada de baja exitosamente.');

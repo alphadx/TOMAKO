@@ -130,6 +130,13 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js
         </div>
     </div>
 
+    <!-- Sección de Fotos -->
+    <?= $this->render('_images', [
+        'model'         => $model,
+        'imagenes'      => $imagenes,
+        'imagenDefault' => $imagenDefault,
+    ]) ?>
+
     <!-- Historial de movimientos -->
     <div class="card shadow-sm mt-3">
         <div class="card-header"><strong><i class="bi bi-clock-history me-2"></i>Historial de Movimientos</strong></div>

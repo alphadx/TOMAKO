@@ -16,6 +16,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $estadoLabels = ['sin_stock' => 'Sin Stock', 'bajo' => 'Stock Bajo', 'en_stock' => 'En Stock'];
 
+$qrUrl = Url::to(['inventario/view', 'id' => $model->id], true);
+
 $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js', ['position' => \yii\web\View::POS_HEAD]);
 ?>
 
@@ -28,7 +30,6 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js
             </span>
         </h1>
         <div class="d-flex gap-2">
-            <?= Html::a('<i class="bi bi-qr-code-scan me-1"></i>QR', ['qr-scan'], ['class' => 'btn btn-outline-info btn-sm']) ?>
             <?= Html::a('<i class="bi bi-pencil me-1"></i>Editar', ['update', 'id' => $model->id], ['class' => 'btn btn-outline-secondary btn-sm']) ?>
             <?php if ($model->status): ?>
                 <?= Html::a('<i class="bi bi-x-circle me-1"></i>Desactivar', ['deactivate', 'id' => $model->id], [
@@ -53,7 +54,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js
                             'nombre',
                             'descripcion:ntext',
                             ['label' => 'Categoría', 'value' => $model->categoria ? $model->categoria->nombre : '—'],
-['label' => 'Precio Unitario', 'value' => '$ ' . number_format((float)$model->precio_unitario, 0, ',', '.')],
+                            ['label' => 'Precio Unitario', 'value' => '$ ' . number_format((float)$model->precio_unitario, 0, ',', '.')],
                             ['label' => 'Stock Actual', 'format' => 'raw',
                              'value' => '<strong>' . $model->cantidad . '</strong> ' . Html::encode($model->unidad ?? '')],
                             ['label' => 'Stock Mínimo', 'value' => $model->stock_minimo],
@@ -69,8 +70,20 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js
             </div>
         </div>
 
-        <!-- Formularios de movimiento -->
+        <!-- Sidebar -->
         <div class="col-md-4">
+            <!-- QR Code -->
+            <div class="card shadow-sm mb-3 border-info">
+                <div class="card-header bg-info text-white text-center">
+                    <i class="bi bi-qr-code me-2"></i><strong>Código QR</strong>
+                </div>
+                <div class="card-body text-center">
+                    <div id="qr-container" class="d-inline-block mb-2"></div>
+                    <p class="text-muted small mb-1">Escanea este código desde el celular para ver este producto.</p>
+                    <p class="text-muted small mb-0 font-monospace"><?= Html::encode($model->sku) ?></p>
+                </div>
+            </div>
+
             <!-- Entrada -->
             <div class="card shadow-sm mb-3 border-success">
                 <div class="card-header bg-success text-white">
@@ -173,3 +186,19 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js
         </div>
     </div>
 </div>
+
+<?php
+$js = <<<JS
+if (typeof QRCode !== 'undefined') {
+    new QRCode(document.getElementById('qr-container'), {
+        text: '{$qrUrl}',
+        width: 160,
+        height: 160,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+    });
+}
+JS;
+$this->registerJs($js);
+?>

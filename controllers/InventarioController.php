@@ -20,8 +20,7 @@ use app\components\behaviors\AccessControlBehavior;
 /**
  * InventarioController: gestion de inventario de insumos del taller.
  *
- * Incluye gestion de imagenes de productos (captura, subida, baja, predefinida)
- * y generacion/busqueda por codigo QR.
+ * Incluye gestion de imagenes de productos (captura, subida, baja, predefinida).
  *
  * @author ID3.CL
  * @since 1.0.0
@@ -68,8 +67,6 @@ class InventarioController extends BaseController
                     'upload-image'       => 'editar',
                     'deactivate-image'   => 'editar',
                     'set-default-image'  => 'editar',
-                    'qr-scan'            => 'ver',
-                    'qr-search'          => 'ver',
                 ],
             ],
         ];
@@ -378,61 +375,6 @@ class InventarioController extends BaseController
         Yii::$app->session->setFlash('success', 'Imagen marcada como predefinida.');
 
         return $this->redirect(['view', 'id' => $itemId]);
-    }
-
-    // ── QR Code ──────────────────────────────────────────────────────
-
-    /**
-     * Pagina para escanear QR con la camara del telefono.
-     */
-    public function actionQrScan(): string
-    {
-        return $this->render('qr-scan');
-    }
-
-    /**
-     * Busca un producto por su codigo QR via GET.
-     */
-    public function actionQrSearch(string $qr = ''): Response|string
-    {
-        if ($qr === '') {
-            $qr = Yii::$app->request->get('q', '');
-        }
-
-        if ($qr === '') {
-            return $this->render('qr-search', ['model' => null, 'qr' => '']);
-        }
-
-        $item = InventoryItem::findByQrCode($qr);
-
-        if ($item !== null) {
-            return $this->redirect(['view', 'id' => $item->id]);
-        }
-
-        // Tambien buscar por SKU como fallback
-        $item = InventoryItem::find()->where(['sku' => $qr])->one();
-        if ($item !== null) {
-            return $this->redirect(['view', 'id' => $item->id]);
-        }
-
-        Yii::$app->session->setFlash('warning', "No se encontro un producto con el codigo QR: {$qr}");
-        return $this->render('qr-search', ['model' => null, 'qr' => $qr]);
-    }
-
-    /**
-     * Retorna datos del QR de un item (JSON).
-     */
-    public function actionQrImage(int $id): Response
-    {
-        $item = $this->findModel($id);
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        return [
-            'sku'     => $item->sku,
-            'qr_code' => $item->qr_code,
-            'url'     => $item->getQrUrl(),
-            'nombre'  => $item->nombre,
-        ];
     }
 
     private function findModel(int $id): InventoryItem

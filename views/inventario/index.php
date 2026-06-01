@@ -18,8 +18,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0"><i class="bi bi-boxes me-2"></i><?= Html::encode($this->title) ?></h1>
         <div class="d-flex gap-2">
-            <?= Html::a('<i class="bi bi-qr-code-scan me-1"></i>Escanear QR', ['qr-scan'], ['class' => 'btn btn-outline-info']) ?>
-            <?= Html::a('<i class="bi bi-qr-code me-1"></i>Buscar QR', ['qr-search'], ['class' => 'btn btn-outline-info']) ?>
             <?= Html::a('<i class="bi bi-download me-1"></i>CSV', ['export-csv'], ['class' => 'btn btn-outline-secondary']) ?>
             <?= Html::a('<i class="bi bi-plus-lg me-1"></i>Nuevo Ítem', ['create'], ['class' => 'btn btn-success']) ?>
         </div>

@@ -42,7 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?= Html::a('Cancelar', '#', ['class' => 'btn btn-danger', 'data-action' => 'cancelar']) ?>
         <?php endif ?>
 
-        <?= Html::a('Editar', '#', ['class' => 'btn btn-warning']) ?>
+        <?= Html::a('Editar', ['gestionar-checklist', 'id' => $model->id], ['class' => 'btn btn-warning']) ?>
         <?= Html::a('Atrás', ['index'], ['class' => 'btn btn-secondary']) ?>
     </div>
 
@@ -102,15 +102,86 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 <?php
-$this->registerJs(<<<'JS'
-// Handle actions
-document.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const action = this.dataset.action;
-        const estado = this.dataset.estado;
-        // TODO: Implement action handling
+$quickActions = [
+    'cambiarEstadoUrl' => Url::to(['cambiar-estado', 'id' => $model->id]),
+    'cancelarUrl' => Url::to(['cancelar', 'id' => $model->id]),
+];
+
+$js = <<<'JS'
+(() => {
+    const quickActions = __QUICK_ACTIONS__;
+
+    const csrfParamMeta = document.querySelector('meta[name="csrf-param"]');
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfParam = csrfParamMeta ? csrfParamMeta.content : '_csrf';
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.content : '';
+
+    function submitPost(url, params = {}) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = csrfParam;
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+        }
+
+        Object.entries(params).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = String(value ?? '');
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const action = this.dataset.action;
+            const estado = this.dataset.estado;
+
+            if (action === 'cambiar-estado') {
+                if (!estado) {
+                    alert('No se indicó el estado de destino.');
+                    return;
+                }
+
+                const textoEstado = estado.replaceAll('_', ' ');
+                if (!confirm('¿Cambiar estado a "' + textoEstado + '"?')) {
+                    return;
+                }
+
+                submitPost(quickActions.cambiarEstadoUrl, { estado });
+                return;
+            }
+
+            if (action === 'cancelar') {
+                const motivo = prompt('Motivo de cancelación:', 'Cancelada por usuario');
+                if (motivo === null) {
+                    return;
+                }
+
+                if (!confirm('¿Confirmas cancelar esta orden?')) {
+                    return;
+                }
+
+                submitPost(quickActions.cancelarUrl, { motivo });
+            }
+        });
     });
-});
-JS
-) ?>
+})();
+JS;
+
+$js = str_replace('__QUICK_ACTIONS__', json_encode($quickActions, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $js);
+
+$this->registerJs($js);
+?>

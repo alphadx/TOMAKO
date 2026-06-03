@@ -34,6 +34,13 @@ use app\models\ClienteEtiqueta;
  */
 class Cliente extends ActiveRecord
 {
+    // Compatibilidad con esquemas que aun no incluyen estas columnas en BD.
+    public ?string $tipo_identificacion = 'RUN';
+    public ?string $identificacion_alternativa = null;
+    public ?string $cumpleanos = null;
+    public ?string $fuente = null;
+    public ?string $preferencias = null;
+
     public static function tableName(): string
     {
         return '{{%cliente}}';
@@ -98,12 +105,20 @@ class Cliente extends ActiveRecord
         if (!parent::beforeSave($insert)) {
             return false;
         }
-        // Normalizar email a minúsculas
+        // Normalizar email a minúsculas, con fallback cuando mbstring no está disponible.
         if ($this->email !== null) {
-            $this->email = mb_strtolower(trim($this->email), 'UTF-8');
+            $email = trim((string) $this->email);
+            $this->email = function_exists('mb_strtolower')
+                ? mb_strtolower($email, 'UTF-8')
+                : strtolower($email);
         }
-        // Normalizar nombre con ucwords
-        $this->nombre = ucwords(strtolower(trim($this->nombre)));
+
+        // Normalizar nombre preservando acentos si mbstring está disponible.
+        $nombre = trim((string) $this->nombre);
+        $this->nombre = (function_exists('mb_convert_case') && function_exists('mb_strtolower'))
+            ? mb_convert_case(mb_strtolower($nombre, 'UTF-8'), MB_CASE_TITLE, 'UTF-8')
+            : ucwords(strtolower($nombre));
+
         if ($this->telefono !== null && $this->telefono !== '') {
             $this->telefono = trim(preg_replace('/\s+/', ' ', $this->telefono) ?? $this->telefono);
         }

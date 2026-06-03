@@ -151,6 +151,14 @@ class OrdenServicio extends ActiveRecord
         return in_array($nuevoEstado, self::TRANSICIONES[$this->estado] ?? [], true);
     }
 
+    /** Retorna los estados disponibles desde el estado actual. */
+    public function getEstadosDisponibles(): array
+    {
+        $estados = self::TRANSICIONES[$this->estado] ?? [];
+
+        return array_intersect_key(self::getEstadosList(), array_flip($estados));
+    }
+
     /** Recalcula el total sumando subtotales de los detalles. */
     public function calcularTotal(): void
     {

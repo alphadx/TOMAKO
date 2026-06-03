@@ -8,6 +8,7 @@ use app\models\OrdenServicio;
 use app\models\OrdenServicioDetalle;
 use app\models\AsignacionOrden;
 use app\models\OrdenNota;
+use app\models\ChecklistItem;
 use app\models\OrdenEstadoLog;
 use app\models\Cita;
 use app\models\Servicio;
@@ -26,14 +27,15 @@ class OrdenService extends BaseService
     /**
      * Crea una orden de servicio con detalles y técnicos.
      *
-     * @param array    $data          Atributos de la orden.
-    * @param array    $servicioItems [[servicio_id, cantidad, precio_unitario, nota], ...]
-     * @param int[]    $tecnicoIds    IDs de técnicos a asignar.
+     * @param array    $data           Atributos de la orden.
+     * @param array    $servicioItems  [[servicio_id, cantidad, precio_unitario, nota], ...]
+     * @param int[]    $tecnicoIds     IDs de técnicos a asignar.
+     * @param string[] $checklistItems Lista de items para inicializar checklist (opcional)
      * @return OrdenServicio|null
      */
-    public function create(array $data, array $servicioItems, array $tecnicoIds): ?OrdenServicio
+    public function create(array $data, array $servicioItems, array $tecnicoIds, array $checklistItems = []): ?OrdenServicio
     {
-        return $this->executeInTransaction(function () use ($data, $servicioItems, $tecnicoIds): OrdenServicio {
+        return $this->executeInTransaction(function () use ($data, $servicioItems, $tecnicoIds, $checklistItems): OrdenServicio {
             $orden = new OrdenServicio();
             $orden->setAttributes($data);
 
@@ -54,6 +56,22 @@ class OrdenService extends BaseService
 
             foreach (array_unique($tecnicoIds) as $tid) {
                 $this->asignarTecnicoInterno($orden, (int) $tid);
+            }
+
+            // Inicializar checklist si se proporcionaron items personalizados
+            foreach ($checklistItems as $itemStr) {
+                $item = trim((string) $itemStr);
+                if ($item === '') {
+                    continue;
+                }
+                $check = new ChecklistItem();
+                $check->orden_id = $orden->id;
+                $check->item = $item;
+                $check->completado = false;
+                $check->created_at = time();
+                if (!$check->save(false)) {
+                    throw new ServiceException('Error al guardar item del checklist.');
+                }
             }
 
             $this->registrarLog($orden, null, $orden->estado, null, 'Orden creada');

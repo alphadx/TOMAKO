@@ -81,11 +81,12 @@ class OrdenController extends BaseController
         $tecnicos  = Tecnico::find()->where(['status' => 1])->orderBy(['apellido' => SORT_ASC])->all();
 
         if (Yii::$app->request->isPost) {
-            $data          = Yii::$app->request->post('OrdenServicio', []);
-            $servicioItems = Yii::$app->request->post('servicios', []);
-            $tecnicoIds    = (array) Yii::$app->request->post('tecnico_ids', []);
+            $data           = Yii::$app->request->post('OrdenServicio', []);
+            $servicioItems  = Yii::$app->request->post('servicios', []);
+            $tecnicoIds     = (array) Yii::$app->request->post('tecnico_ids', []);
+            $checklistItems = (array) Yii::$app->request->post('checklist_items', []);
 
-            $orden = $service->create($data, $servicioItems, $tecnicoIds);
+            $orden = $service->create($data, $servicioItems, $tecnicoIds, $checklistItems);
             if ($orden !== null) {
                 Yii::$app->session->setFlash('success', "Orden {$orden->codigo} creada exitosamente.");
                 return $this->redirect(['view', 'id' => $orden->id]);

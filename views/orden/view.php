@@ -7,6 +7,7 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\grid\GridView;
 use yii\data\ArrayDataProvider;
+use yii\bootstrap5\Tabs;
 use app\models\OrdenServicio;
 use app\components\services\PagoService;
 
@@ -134,58 +135,23 @@ foreach ($todos as $e) {
                 <?php endif; ?>
             </div>
 
-            <!-- Notas -->
-            <div class="card shadow-sm mb-3">
-                <div class="card-header"><strong><i class="bi bi-chat-left-text me-1"></i>Notas</strong></div>
-                <?php if (!empty($model->notas)): ?>
-                    <ul class="list-group list-group-flush">
-                        <?php foreach ($model->notas as $nota): ?>
-                        <li class="list-group-item">
-                            <small class="text-muted d-block"><?= $nota->created_at ? date('d/m/Y H:i', $nota->created_at) : '' ?></small>
-                            <?= Html::encode($nota->texto) ?>
-                        </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php else: ?>
-                    <div class="card-body text-muted text-center">Sin notas.</div>
-                <?php endif; ?>
-                <!-- Formulario agregar nota -->
-                <div class="card-footer">
-                    <form method="post" action="<?= \yii\helpers\Url::to(['agregar-nota', 'id' => $model->id]) ?>">
-                        <?= \yii\helpers\Html::hiddenInput(\Yii::$app->request->csrfParam, \Yii::$app->request->csrfToken) ?>
-                        <div class="input-group">
-                            <input type="text" name="texto" class="form-control form-control-sm" placeholder="Agregar nota..." required>
-                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Sección de pago -->
-            <div class="card shadow-sm border-warning mb-3">
-                <div class="card-header bg-warning text-dark"><strong><i class="bi bi-cash-coin me-1"></i>Pagos</strong></div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Total orden:</span>
-                        <strong>$ <?= number_format((float) $model->total, 0, ',', '.') ?></strong>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Total pagado:</span>
-                        <strong class="text-success">$ <?= number_format((float)$totalPagado, 0, ',', '.') ?></strong>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3">
-                        <span>Saldo pendiente:</span>
-                        <strong class="<?= $saldoPendiente > 0 ? 'text-danger' : 'text-success' ?>">
-                            $ <?= number_format((float)$saldoPendiente, 0, ',', '.') ?>
-                        </strong>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <?= Html::a('Registrar pago', ['/pago/create', 'orden_id' => $model->id], ['class' => 'btn btn-sm btn-primary']) ?>
-                        <?= Html::a('Historial', ['/pago/historial', 'ordenId' => $model->id], ['class' => 'btn btn-sm btn-outline-secondary']) ?>
-                    </div>
-                </div>
-            </div>
+            <?= Tabs::widget([
+                'items' => [
+                    [
+                        'label' => 'Notas (' . count($model->notas) . ')',
+                        'content' => $this->renderAjax('_tab_notas', ['model' => $model]),
+                    ],
+                    [
+                        'label' => 'Pagos',
+                        'content' => $this->renderAjax('_tab_pagos', [
+                            'model' => $model,
+                            'totalPagado' => $totalPagado,
+                            'saldoPendiente' => $saldoPendiente,
+                        ]),
+                    ],
+                ],
+                'options' => ['id' => 'orden-tabs'],
+            ]) ?>
         </div>
 
         <!-- Columna derecha: técnicos + cambio estado + timeline -->

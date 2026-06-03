@@ -511,6 +511,34 @@ body {
   margin-bottom: 1rem;
 }
 
+/* ── Select2 clear button fix ──────────────────────────────── */
+/* Fix: theme 'bootstrap4' is used in JS but CSS is bootstrap5,
+   so no theme CSS targets --bootstrap4 containers.
+   Ensure the clear (×) button is absolutely positioned beside the rendered text. */
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__clear {
+    position: absolute;
+    top: 50%;
+    right: 2.25rem;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-weight: bold;
+    background: none;
+    border: none;
+    padding: 0 .2rem;
+    line-height: 1;
+    color: var(--ts-muted, #6c757d);
+    z-index: 1;
+}
+
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+    padding-right: 2.5rem;
+}
+
+/* Ensure the selection container allows absolute positioning */
+.select2-container--bootstrap4 .select2-selection--single {
+    position: relative;
+}
+
 /* ── Footer ──────────────────────────────────────────────── */
 #ts-footer {
   text-align: center;

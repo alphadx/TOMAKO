@@ -49,6 +49,7 @@ class DashboardController extends BaseController
         return $this->render('index', [
             'kpis' => $service->getKpis(),
             'citasHoy' => $service->getCitasHoy(),
+            'ordenesPrioritarias' => $service->getOrdenesPrioritarias(),
             'alertasStock' => $service->getAlertasStock(),
             'ordenesActivas' => $service->getOrdenesActivas(),
             'accesosRapidos' => $service->getAccesosRapidos(),

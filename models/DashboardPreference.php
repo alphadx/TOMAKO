@@ -174,6 +174,7 @@ class DashboardPreference extends ActiveRecord
             
             // Widgets
             'widget_citas_hoy' => ['id' => 'widget_citas_hoy', 'title' => 'Lista Citas Hoy', 'category' => 'Widgets'],
+            'widget_ordenes_prioritarias' => ['id' => 'widget_ordenes_prioritarias', 'title' => 'Órdenes Prioritarias', 'category' => 'Widgets'],
             'widget_ordenes_activas' => ['id' => 'widget_ordenes_activas', 'title' => 'Órdenes Activas', 'category' => 'Widgets'],
             'widget_alertas_stock' => ['id' => 'widget_alertas_stock', 'title' => 'Alertas de Stock', 'category' => 'Widgets'],
             'widget_accesos_rapidos' => ['id' => 'widget_accesos_rapidos', 'title' => 'Accesos Rápidos', 'category' => 'Widgets'],

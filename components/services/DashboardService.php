@@ -125,6 +125,30 @@ class DashboardService extends BaseService
     }
 
     /**
+     * @return array<int, OrdenServicio>
+     */
+    public function getOrdenesPrioritarias(): array
+    {
+        return (array) $this->getKpiConCache('lista_ordenes_prioritarias', function (): array {
+            return OrdenServicio::find()
+                ->alias('os')
+                ->joinWith(['cliente', 'vehiculo'])
+                ->where(['in', 'os.estado', [
+                    'abierto',
+                    'en_progreso',
+                    'esperando_repuestos',
+                    'listo_para_entrega',
+                ]])
+                ->orderBy([
+                    new Expression("FIELD(os.prioridad, 'urgente', 'alta', 'normal', 'baja')"),
+                    'os.updated_at' => SORT_DESC,
+                ])
+                ->limit(8)
+                ->all();
+        });
+    }
+
+    /**
      * @return array<int, array{icon:string,title:string,description:string,url:array}>
      */
     public function getAccesosRapidos(): array
@@ -212,6 +236,7 @@ class DashboardService extends BaseService
             'lista_citas_hoy',
             'alertas_stock',
             'ordenes_activas_estado',
+            'lista_ordenes_prioritarias',
             // Primeros 5 indicadores
             'tasa_entrega_tiempo',
             'tiempo_promedio_resolucion',

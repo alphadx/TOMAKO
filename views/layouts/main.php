@@ -51,7 +51,7 @@ $menuItems = [
         'url' => ['/orden/index'], 
         'modulo' => 'orden',
         'submenu' => [
-            ['label' => 'Vista nueva', 'url' => ['/orden/index']],
+            ['label' => 'Listado', 'url' => ['/orden/index']],
             ['label' => 'Listado operativo', 'url' => ['/orden-servicio/index']],
             ['label' => 'Tablero Kanban', 'url' => ['/orden-servicio/kanban']],
             ['label' => 'Reporte Técnico', 'url' => ['/orden-servicio/reporte-tecnico']],

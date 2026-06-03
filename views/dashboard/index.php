@@ -5,6 +5,7 @@ declare(strict_types=1);
 /** @var yii\web\View $this */
 /** @var array<string, int|float|array> $kpis */
 /** @var app\models\Cita[] $citasHoy */
+/** @var app\models\OrdenServicio[] $ordenesPrioritarias */
 /** @var app\models\InventoryItem[] $alertasStock */
 /** @var array<string,int> $ordenesActivas */
 /** @var array<int,array{icon:string,title:string,description:string,url:array}> $accesosRapidos */
@@ -16,6 +17,7 @@ use app\components\widgets\AlertasStockWidget;
 use app\components\widgets\CitasHoyWidget;
 use app\components\widgets\KpiCard;
 use app\components\widgets\OrdenesActivasWidget;
+use app\components\widgets\OrdenesPrioritariasWidget;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\web\View;
@@ -307,34 +309,34 @@ $renderWidgetSafe = static function (callable $render): string {
         <?php endif; ?>
     </section>
 
+    <section class="row g-3 mb-3">
+        <?php if ($esVisible('widget_citas_hoy')) : ?>
+            <div class="col-12 col-md-6">
+                <?= $renderWidgetSafe(static fn(): string => CitasHoyWidget::widget(['citas' => $citasHoy])) ?>
+            </div>
+        <?php endif; ?>
+        <?php if ($esVisible('widget_ordenes_prioritarias')) : ?>
+            <div class="col-12 col-md-6">
+                <?= $renderWidgetSafe(static fn(): string => OrdenesPrioritariasWidget::widget(['ordenes' => $ordenesPrioritarias])) ?>
+            </div>
+        <?php endif; ?>
+    </section>
+
     <section class="row g-3">
-        <div class="col-12 col-xl-8">
-            <div class="row g-3">
-                <?php if ($esVisible('widget_citas_hoy')) : ?>
-                    <div class="col-12">
-                        <?= $renderWidgetSafe(static fn(): string => CitasHoyWidget::widget(['citas' => $citasHoy])) ?>
-                    </div>
-                <?php endif; ?>
-                <?php if ($esVisible('widget_ordenes_activas')) : ?>
-                    <div class="col-12">
-                        <?= $renderWidgetSafe(static fn(): string => OrdenesActivasWidget::widget(['ordenes' => $ordenesActivas])) ?>
-                    </div>
-                <?php endif; ?>
+        <?php if ($esVisible('widget_ordenes_activas')) : ?>
+            <div class="col-12 col-md-4">
+                <?= $renderWidgetSafe(static fn(): string => OrdenesActivasWidget::widget(['ordenes' => $ordenesActivas])) ?>
             </div>
-        </div>
-        <div class="col-12 col-xl-4">
-            <div class="row g-3">
-                <?php if ($esVisible('widget_alertas_stock')) : ?>
-                    <div class="col-12">
-                        <?= $renderWidgetSafe(static fn(): string => AlertasStockWidget::widget(['alertas' => $alertasStock])) ?>
-                    </div>
-                <?php endif; ?>
-                <?php if ($esVisible('widget_accesos_rapidos')) : ?>
-                    <div class="col-12">
-                        <?= $renderWidgetSafe(static fn(): string => AccesosRapidosWidget::widget(['accesos' => $accesosRapidos])) ?>
-                    </div>
-                <?php endif; ?>
+        <?php endif; ?>
+        <?php if ($esVisible('widget_alertas_stock')) : ?>
+            <div class="col-12 col-md-4">
+                <?= $renderWidgetSafe(static fn(): string => AlertasStockWidget::widget(['alertas' => $alertasStock])) ?>
             </div>
-        </div>
+        <?php endif; ?>
+        <?php if ($esVisible('widget_accesos_rapidos')) : ?>
+            <div class="col-12 col-md-4">
+                <?= $renderWidgetSafe(static fn(): string => AccesosRapidosWidget::widget(['accesos' => $accesosRapidos])) ?>
+            </div>
+        <?php endif; ?>
     </section>
 </div>

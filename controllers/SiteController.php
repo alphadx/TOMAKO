@@ -63,62 +63,9 @@ class SiteController extends BaseController
     }
 
     /** Página principal */
-    public function actionIndex(): string
+    public function actionIndex(): Response
     {
-        $stats = [
-            'clientesActivos'   => $this->safeCount(Cliente::class, ['status' => 1]),
-            'vehiculosActivos'  => $this->safeCount(Vehiculo::class, ['status' => 1]),
-            'tecnicosActivos'   => $this->safeCount(Tecnico::class, ['status' => 1]),
-            'ordenesAbiertas'   => $this->safeCount(OrdenServicio::class, ['estado' => ['abierto', 'en_progreso', 'esperando_repuestos', 'listo_para_entrega']]),
-            'citasHoy'          => $this->safeCount(Cita::class, ['fecha' => date('Y-m-d')]),
-            'inventarioCritico' => $this->safeInventarioCritico(),
-        ];
-
-        $proximasCitas = [];
-        try {
-            $proximasCitas = Cita::find()
-                ->alias('ci')
-                ->joinWith(['cliente cl', 'vehiculo vh'])
-                ->andWhere(['>=', 'ci.fecha', date('Y-m-d')])
-                ->andWhere(['in', 'ci.estado', ['pendiente', 'confirmada', 'en_progreso']])
-                ->orderBy(['ci.fecha' => SORT_ASC, 'ci.hora_inicio' => SORT_ASC])
-                ->limit(6)
-                ->all();
-        } catch (\Throwable $e) {
-            Yii::warning('No se pudieron cargar próximas citas: ' . $e->getMessage(), 'app.dashboard');
-        }
-
-        $ordenesPrioritarias = [];
-        try {
-            $ordenesPrioritarias = OrdenServicio::find()
-                ->alias('os')
-                ->joinWith(['cliente cl', 'vehiculo vh'])
-                ->where(['in', 'os.estado', ['abierto', 'en_progreso', 'esperando_repuestos', 'listo_para_entrega']])
-                ->orderBy([
-                    new Expression("FIELD(os.prioridad, 'urgente', 'alta', 'normal', 'baja')"),
-                    'os.updated_at' => SORT_DESC,
-                ])
-                ->limit(6)
-                ->all();
-        } catch (\Throwable $e) {
-            Yii::warning('No se pudieron cargar órdenes prioritarias: ' . $e->getMessage(), 'app.dashboard');
-        }
-
-        $quickLinks = [
-            ['icon' => '📅', 'title' => 'Nueva Cita', 'description' => 'Agenda una atención para un cliente.', 'url' => ['/cita/create']],
-            ['icon' => '🔧', 'title' => 'Nueva Orden', 'description' => 'Abre una orden de servicio para diagnóstico o reparación.', 'url' => ['/orden/create']],
-            ['icon' => '👥', 'title' => 'Nuevo Cliente', 'description' => 'Registra un cliente y su información de contacto.', 'url' => ['/cliente/create']],
-            ['icon' => '🚗', 'title' => 'Nuevo Vehículo', 'description' => 'Asocia un vehículo al cliente y su historial inicial.', 'url' => ['/vehiculo/create']],
-            ['icon' => '📦', 'title' => 'Inventario', 'description' => 'Revisa stock y realiza ajustes de existencias.', 'url' => ['/inventario/index']],
-            ['icon' => '👨‍🔧', 'title' => 'Técnicos', 'description' => 'Gestiona disponibilidad y especialidades del equipo.', 'url' => ['/tecnico/index']],
-        ];
-
-        return $this->render('index', [
-            'stats'               => $stats,
-            'proximasCitas'       => $proximasCitas,
-            'ordenesPrioritarias' => $ordenesPrioritarias,
-            'quickLinks'          => $quickLinks,
-        ]);
+        return $this->redirect(['/dashboard/index']);
     }
 
     private function safeCount(string $modelClass, array $condition = []): ?int

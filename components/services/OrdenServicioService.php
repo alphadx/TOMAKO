@@ -39,11 +39,20 @@ class OrdenServicioService
      */
     public function create(array $data, int $usuarioId): OrdenServicio
     {
+        $clienteId = filter_var($data['cliente_id'] ?? null, FILTER_VALIDATE_INT);
+        $vehiculoId = filter_var($data['vehiculo_id'] ?? null, FILTER_VALIDATE_INT);
+
+        if ($clienteId === false || $vehiculoId === false) {
+            throw new Exception('Cliente y vehículo son requeridos.');
+        }
+
         $orden = new OrdenServicio();
         $orden->attributes = $data;
+        $orden->cliente_id = (int)$clienteId;
+        $orden->vehiculo_id = (int)$vehiculoId;
 
         // Validate vehicle belongs to client
-        if (!$this->validarVehiculoDelCliente($data['cliente_id'], $data['vehiculo_id'])) {
+        if (!$this->validarVehiculoDelCliente((int)$clienteId, (int)$vehiculoId)) {
             throw new Exception('El vehículo no pertenece a este cliente.');
         }
 
@@ -141,8 +150,8 @@ class OrdenServicioService
         $detalle->orden_id = $orden->id;
         $detalle->servicio_id = $servicio->id;
         $detalle->cantidad = $cantidad;
-        $detalle->precio_unitario = $servicio->precio;
-        $detalle->subtotal = $servicio->precio * $cantidad;
+        $detalle->precio_unitario = $servicio->precio_base;
+        $detalle->subtotal = $servicio->precio_base * $cantidad;
 
         if (!$detalle->save()) {
             throw new Exception('Error al agregar servicio: ' . implode(', ', $detalle->getErrorSummary(true)));
@@ -415,16 +424,24 @@ class OrdenServicioService
     }
 
     /**
-     * Validate that vehicle belongs to client
+     * Validate that vehicle belongs to client.
+     * Accepts string IDs from raw POST payloads to avoid strict_types TypeError.
      *
-     * @param int $clienteId
-     * @param int $vehiculoId
+     * @param int|string $clienteId
+     * @param int|string $vehiculoId
      * @return bool
      */
-    public function validarVehiculoDelCliente(int $clienteId, int $vehiculoId): bool
+    public function validarVehiculoDelCliente($clienteId, $vehiculoId): bool
     {
-        $vehiculo = Vehiculo::findOne($vehiculoId);
-        return $vehiculo && $vehiculo->cliente_id === $clienteId;
+        $clienteId = filter_var($clienteId, FILTER_VALIDATE_INT);
+        $vehiculoId = filter_var($vehiculoId, FILTER_VALIDATE_INT);
+
+        if ($clienteId === false || $vehiculoId === false) {
+            return false;
+        }
+
+        $vehiculo = Vehiculo::findOne((int)$vehiculoId);
+        return $vehiculo !== null && (int)$vehiculo->cliente_id === (int)$clienteId;
     }
 
     // ─── Private Helper Methods ───────────────────────────────────────

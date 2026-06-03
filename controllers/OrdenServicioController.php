@@ -210,15 +210,32 @@ class OrdenServicioController extends Controller
     public function actionCreate()
     {
         if ($this->request->isPost) {
+            $transaction = Yii::$app->db->beginTransaction();
             try {
                 $data = Yii::$app->request->post();
-                $usuarioId = Yii::$app->user->id;
+                $usuarioId = (int)Yii::$app->user->id;
+
+                $servicioIds = array_map(
+                    'intval',
+                    (array)Yii::$app->request->post('servicio_ids', [])
+                );
+                $servicioIds = array_filter($servicioIds, static fn(int $id): bool => $id > 0);
+                $servicioCantidades = array_count_values($servicioIds);
 
                 $orden = $this->service->create($data, $usuarioId);
+
+                foreach ($servicioCantidades as $servicioId => $cantidad) {
+                    $this->service->agregarServicio((int)$orden->id, (int)$servicioId, (int)$cantidad, $usuarioId);
+                }
+
+                $transaction->commit();
 
                 Yii::$app->session->setFlash('success', 'Orden creada exitosamente: ' . $orden->codigo);
                 return $this->redirect(['view', 'id' => $orden->id]);
             } catch (Exception $e) {
+                if ($transaction->isActive) {
+                    $transaction->rollBack();
+                }
                 Yii::$app->session->setFlash('error', $e->getMessage());
             }
         }

@@ -62,6 +62,17 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray(
                         ], ['class' => 'form-control']) ?>
                     </div>
 
+                    <!-- Selected Services -->
+                    <div class="mb-3">
+                        <label class="form-label">Servicios Seleccionados</label>
+                        <div class="border rounded p-2 bg-light">
+                            <div id="servicios-seleccionados-empty" class="text-muted small">Aún no hay servicios seleccionados.</div>
+                            <ul id="servicios-seleccionados-list" class="list-group list-group-flush"></ul>
+                            <div id="servicios-seleccionados-total" class="fw-bold text-end mt-2 d-none"></div>
+                        </div>
+                        <div id="servicios-seleccionados-inputs"></div>
+                    </div>
+
                     <div class="text-end">
                         <?= Html::a('Cancelar', ['index'], ['class' => 'btn btn-secondary']) ?>
                         <?= Html::submitButton('Crear Orden', ['class' => 'btn btn-primary']) ?>
@@ -89,7 +100,7 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray(
                                 </div>
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-primary"
+                                    class="btn btn-sm btn-outline-primary js-add-servicio"
                                     data-servicio-id="<?= $servicio['id'] ?>"
                                     data-servicio-nombre="<?= $servicio['nombre'] ?>"
                                     data-servicio-precio="<?= $servicio['precio_base'] ?>"
@@ -107,6 +118,113 @@ $servicios = Servicio::find()->select(['id', 'nombre', 'precio_base'])->asArray(
 
 <?php
 $this->registerJs(<<<'JS'
+const serviciosSeleccionados = new Map();
+
+function formatearMoneda(valor) {
+    const numero = Number.isFinite(valor) ? valor : 0;
+    return new Intl.NumberFormat('es-CL', {
+        style: 'currency',
+        currency: 'CLP',
+        maximumFractionDigits: 0,
+    }).format(numero);
+}
+
+function renderServiciosSeleccionados() {
+    const lista = document.getElementById('servicios-seleccionados-list');
+    const empty = document.getElementById('servicios-seleccionados-empty');
+    const totalEl = document.getElementById('servicios-seleccionados-total');
+    const inputs = document.getElementById('servicios-seleccionados-inputs');
+
+    lista.innerHTML = '';
+    inputs.innerHTML = '';
+
+    let total = 0;
+
+    serviciosSeleccionados.forEach((servicio) => {
+        total += servicio.precio * servicio.cantidad;
+
+        const item = document.createElement('li');
+        item.className = 'list-group-item px-0 d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <div>
+                <div>${servicio.nombre}</div>
+                <small class="text-muted">${formatearMoneda(servicio.precio)} c/u</small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary js-decrease-servicio" data-servicio-id="${servicio.id}">-</button>
+                <span class="badge bg-primary">${servicio.cantidad}</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary js-increase-servicio" data-servicio-id="${servicio.id}">+</button>
+                <button type="button" class="btn btn-sm btn-outline-danger js-remove-servicio" data-servicio-id="${servicio.id}">x</button>
+            </div>
+        `;
+        lista.appendChild(item);
+
+        for (let i = 0; i < servicio.cantidad; i += 1) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'servicio_ids[]';
+            input.value = String(servicio.id);
+            inputs.appendChild(input);
+        }
+    });
+
+    const tieneServicios = serviciosSeleccionados.size > 0;
+    empty.classList.toggle('d-none', tieneServicios);
+    totalEl.classList.toggle('d-none', !tieneServicios);
+    totalEl.textContent = `Total estimado: ${formatearMoneda(total)}`;
+}
+
+document.getElementById('servicios-list').addEventListener('click', function(event) {
+    const button = event.target.closest('button.js-add-servicio');
+    if (!button) {
+        return;
+    }
+
+    const id = Number.parseInt(button.dataset.servicioId, 10);
+    const nombre = button.dataset.servicioNombre || 'Servicio';
+    const precio = Number.parseFloat(button.dataset.servicioPrecio || '0');
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return;
+    }
+
+    const actual = serviciosSeleccionados.get(id);
+    if (actual) {
+        actual.cantidad += 1;
+    } else {
+        serviciosSeleccionados.set(id, { id, nombre, precio, cantidad: 1 });
+    }
+
+    renderServiciosSeleccionados();
+});
+
+document.getElementById('servicios-seleccionados-list').addEventListener('click', function(event) {
+    const button = event.target.closest('button[data-servicio-id]');
+    if (!button) {
+        return;
+    }
+
+    const id = Number.parseInt(button.dataset.servicioId, 10);
+    if (!Number.isInteger(id) || !serviciosSeleccionados.has(id)) {
+        return;
+    }
+
+    const servicio = serviciosSeleccionados.get(id);
+
+    if (button.classList.contains('js-remove-servicio')) {
+        serviciosSeleccionados.delete(id);
+    } else if (button.classList.contains('js-increase-servicio')) {
+        servicio.cantidad += 1;
+    } else if (button.classList.contains('js-decrease-servicio')) {
+        servicio.cantidad -= 1;
+        if (servicio.cantidad <= 0) {
+            serviciosSeleccionados.delete(id);
+        }
+    }
+
+    renderServiciosSeleccionados();
+});
+
 // Load vehicles when client is selected
 document.getElementById('cliente_id').addEventListener('change', function() {
     const clienteId = this.value;
@@ -133,5 +251,7 @@ document.getElementById('cliente_id').addEventListener('change', function() {
             vehiculoSelect.innerHTML = '<option value="">Error al cargar vehículos</option>';
         });
 });
+
+renderServiciosSeleccionados();
 JS
 ) ?>

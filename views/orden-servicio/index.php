@@ -18,6 +18,17 @@ $this->title = 'Órdenes de Servicio';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Órdenes de Servicio</h1>
+        <div class="text-muted">Listado operativo con acciones rápidas y acceso a la vista mejorada.</div>
+    </div>
+    <div class="d-flex gap-2">
+        <?= Html::a('Vista nueva', ['/orden/index'], ['class' => 'btn btn-outline-primary']) ?>
+        <?= Html::a('+ Nueva Orden', ['create'], ['class' => 'btn btn-primary']) ?>
+    </div>
+</div>
+
 <div class="orden-servicio-index">
     <?php Pjax::begin(['enablePushState' => false]) ?>
 
@@ -167,11 +178,6 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 
     <?php Pjax::end() ?>
-</div>
-
-<!-- Add Button -->
-<div class="mt-3">
-    <?= Html::a('+ Nueva Orden', ['create'], ['class' => 'btn btn-primary btn-lg']) ?>
 </div>
 
 <div class="modal fade" id="modal-cambio-estado" tabindex="-1" aria-labelledby="modal-cambio-estado-label" aria-hidden="true">

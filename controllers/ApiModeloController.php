@@ -46,7 +46,7 @@ class ApiModeloController extends Controller
         }
         
         if (!empty($term)) {
-            $query->andWhere(['LIKE', 'nombre', $term]);
+            $query->andWhere(['LIKE', 'modelo.nombre', $term]);
         }
         
         $modelos = $query

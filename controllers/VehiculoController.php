@@ -104,8 +104,12 @@ class VehiculoController extends BaseController
             Yii::$app->session->setFlash('error', $service->getPrimerError());
         }
 
+        $model = new Vehiculo();
+        // Pre-cargar atributos desde query params (ej: ?Vehiculo[cliente_id]=21)
+        $model->load(Yii::$app->request->get());
+
         return $this->render('create', [
-            'model'    => new Vehiculo(),
+            'model'    => $model,
             'clientes' => $this->getClientesList(),
         ]);
     }

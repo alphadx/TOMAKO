@@ -258,9 +258,9 @@ function obtenerIconoDocumento(string $nombre): string
 </style>
 
 <?php
-$js = <<<JS
+$js = <<<'JS'
 (function() {
-    const ordenId = '{$model->id}';
+    const ordenId = __ORDEN_ID__;
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     
     // Cargar archivos existentes
@@ -377,48 +377,48 @@ $js = <<<JS
     
     function agregarFotoAGaleria(archivo) {
         const galeria = document.getElementById('galeria-fotos');
-        const fotoHtml = \`
-            <div class="col-md-4 col-sm-6 foto-item" data-id="\${archivo.id}">
-                <img src="\${archivo.thumbnailUrl || archivo.url}" class="foto-thumbnail" alt="\${archivo.nombre}" onclick="verImagen('\${archivo.url}')">
+        const fotoHtml = `
+            <div class="col-md-4 col-sm-6 foto-item" data-id="${archivo.id}">
+                <img src="${archivo.thumbnailUrl || archivo.url}" class="foto-thumbnail" alt="${archivo.nombre}" onclick="verImagen('${archivo.url}')">
                 <div class="foto-overlay">
                     <div class="text-white text-center">
-                        <button class="btn btn-light btn-sm me-2" onclick="verImagen('\${archivo.url}')">
+                        <button class="btn btn-light btn-sm me-2" onclick="verImagen('${archivo.url}')">
                             <i class="bi bi-zoom-in"></i> Ver
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarArchivo(\${archivo.id}, 'foto')">
+                        <button class="btn btn-danger btn-sm" onclick="eliminarArchivo(${archivo.id}, 'foto')">
                             <i class="bi bi-trash"></i> Eliminar
                         </button>
                     </div>
                 </div>
                 <div class="foto-info">
-                    <small class="text-muted d-block text-truncate">\${archivo.nombre}</small>
-                    <small class="text-muted">\${archivo.tamaño} | \${archivo.fecha}</small>
+                    <small class="text-muted d-block text-truncate">${archivo.nombre}</small>
+                    <small class="text-muted">${archivo.tamaño} | ${archivo.fecha}</small>
                 </div>
             </div>
-        \`;
+        `;
         galeria.insertAdjacentHTML('afterbegin', fotoHtml);
     }
     
     function agregarDocumentoALista(archivo) {
         const lista = document.getElementById('lista-documentos');
         const icono = obtenerIconoDocumento(archivo.nombre);
-        const documentoHtml = \`
-            <div class="documento-item" data-id="\${archivo.id}">
-                <div class="documento-icono">\${icono}</div>
+        const documentoHtml = `
+            <div class="documento-item" data-id="${archivo.id}">
+                <div class="documento-icono">${icono}</div>
                 <div class="documento-info">
-                    <strong>\${archivo.nombre}</strong><br>
-                    <small class="text-muted">\${archivo.tamaño} | \${archivo.fecha}</small>
+                    <strong>${archivo.nombre}</strong><br>
+                    <small class="text-muted">${archivo.tamaño} | ${archivo.fecha}</small>
                 </div>
                 <div>
-                    <a href="\${archivo.url}" class="btn btn-sm btn-outline-primary me-2" download>
+                    <a href="${archivo.url}" class="btn btn-sm btn-outline-primary me-2" download>
                         <i class="bi bi-download"></i> Descargar
                     </a>
-                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarArchivo(\${archivo.id}, 'documento')">
+                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarArchivo(${archivo.id}, 'documento')">
                         <i class="bi bi-trash"></i> Eliminar
                     </button>
                 </div>
             </div>
-        \`;
+        `;
         lista.insertAdjacentHTML('afterbegin', documentoHtml);
     }
     
@@ -453,7 +453,7 @@ $js = <<<JS
             
             if (result.success) {
                 // Remover elemento del DOM
-                const elemento = document.querySelector(\`[data-id="\${archivoId}"]\`);
+                const elemento = document.querySelector(`[data-id="${archivoId}"]`);
                 if (elemento) {
                     elemento.remove();
                 }
@@ -472,18 +472,18 @@ $js = <<<JS
     function verImagen(url) {
         const modal = document.createElement('div');
         modal.className = 'modal fade';
-        modal.innerHTML = \`
+        modal.innerHTML = `
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <img src="\${url}" class="modal-imagen-preview">
+                        <img src="${url}" class="modal-imagen-preview">
                     </div>
                 </div>
             </div>
-        \`;
+        `;
         
         document.body.appendChild(modal);
         const bsModal = new bootstrap.Modal(modal);
@@ -507,6 +507,8 @@ $js = <<<JS
     cargarArchivos();
 })();
 JS;
+
+$js = str_replace('__ORDEN_ID__', json_encode((string) $model->id), $js);
 
 $this->registerJs($js);
 ?>

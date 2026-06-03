@@ -8,6 +8,8 @@ use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
+use Exception;
+use app\models\ChecklistItem;
 use app\models\OrdenServicio;
 use app\models\Servicio;
 use app\models\Cliente;
@@ -40,6 +42,11 @@ class OrdenController extends BaseController
                     'agregar-nota'    => ['post'],
                     'asignar-tecnico' => ['post'],
                     'desasignar-tecnico' => ['post'],
+                    'gestionar-checklist' => ['get', 'post'],
+                    'actualizar-checklist-item' => ['post'],
+                    'tab-notas' => ['get'],
+                    'tab-pagos' => ['get'],
+                    'tab-checklist' => ['get'],
                 ],
             ],
         ];
@@ -188,6 +195,100 @@ class OrdenController extends BaseController
         }
 
         return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /** Carga AJAX del tab Notas. */
+    public function actionTabNotas(int $id): string
+    {
+        $orden = $this->findModel($id);
+        return $this->renderAjax('_tab_notas', [
+            'model' => $orden,
+            'addNotaRoute' => ['agregar-nota', 'id' => $id],
+        ]);
+    }
+
+    /** Carga AJAX del tab Pagos. */
+    public function actionTabPagos(int $id): string
+    {
+        $orden = $this->findModel($id);
+        $pagoService = new \app\components\services\PagoService();
+
+        return $this->renderAjax('_tab_pagos', [
+            'model' => $orden,
+            'totalPagado' => $pagoService->totalPagadoPorOrden($id),
+            'saldoPendiente' => $pagoService->getSaldoPendiente($id),
+        ]);
+    }
+
+    /** Carga AJAX del tab Checklist. */
+    public function actionTabChecklist(int $id): string
+    {
+        $orden = $this->findModel($id);
+
+        return $this->renderAjax('_tab_checklist', [
+            'model' => $orden,
+            'gestionarRoute' => ['gestionar-checklist', 'id' => $id],
+            'toggleRoute' => 'actualizar-checklist-item',
+        ]);
+    }
+
+    /** Gestiona checklist de una orden (GET/POST). */
+    public function actionGestionarChecklist(int $id): Response|string
+    {
+        $orden = $this->findModel($id);
+
+        if (Yii::$app->request->isPost) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                ChecklistItem::deleteAll(['orden_id' => $id]);
+
+                $items = Yii::$app->request->post('checklist_items', []);
+                foreach ($items as $itemDescripcion) {
+                    $itemTexto = trim((string) $itemDescripcion);
+                    if ($itemTexto === '') {
+                        continue;
+                    }
+                    $checklistItem = new ChecklistItem([
+                        'orden_id' => $id,
+                        'item' => $itemTexto,
+                        'completado' => false,
+                    ]);
+                    if (!$checklistItem->save(false)) {
+                        throw new Exception('Error al guardar item del checklist.');
+                    }
+                }
+
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', 'Checklist actualizado correctamente.');
+                return $this->redirect(['view', 'id' => $id]);
+            } catch (Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+        }
+
+        return $this->render('//orden-servicio/checklist', [
+            'model' => $orden,
+        ]);
+    }
+
+    /** Actualiza un item checklist (AJAX). */
+    public function actionActualizarChecklistItem(int $id): array
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $item = ChecklistItem::findOne($id);
+        if ($item === null) {
+            return ['success' => false, 'error' => 'Item no encontrado'];
+        }
+
+        $completado = Yii::$app->request->post('completado', false);
+        $item->completado = (bool) $completado;
+        if ($item->save(false)) {
+            return ['success' => true, 'porcentaje' => $item->orden->checklistPorcentaje];
+        }
+
+        return ['success' => false, 'error' => 'No se pudo actualizar el item'];
     }
 
     /** Asigna un técnico a la orden (POST). */

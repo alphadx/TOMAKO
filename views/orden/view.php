@@ -4,12 +4,12 @@
 /** @var app\models\Tecnico[] $tecnicos */
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 use yii\grid\GridView;
 use yii\data\ArrayDataProvider;
 use yii\bootstrap5\Tabs;
 use app\models\OrdenServicio;
-use app\components\services\PagoService;
 
 $this->title = 'Orden ' . $model->codigo;
 $this->params['breadcrumbs'][] = ['label' => 'Órdenes', 'url' => ['index']];
@@ -18,14 +18,15 @@ $this->params['breadcrumbs'][] = $this->title;
 $transicionesLabels = OrdenServicio::getEstadosList();
 $posiblesEstados    = [];
 $todos              = OrdenServicio::ESTADOS;
-$pagoService = new PagoService();
-$totalPagado = $pagoService->totalPagadoPorOrden((int) $model->id);
-$saldoPendiente = $pagoService->getSaldoPendiente((int) $model->id);
 foreach ($todos as $e) {
     if ($model->puedeTransicionar($e)) {
         $posiblesEstados[] = $e;
     }
 }
+
+$tabNotasUrl = Url::to(['tab-notas', 'id' => $model->id]);
+$tabPagosUrl = Url::to(['tab-pagos', 'id' => $model->id]);
+$tabChecklistUrl = Url::to(['tab-checklist', 'id' => $model->id]);
 ?>
 
 <div class="orden-view">
@@ -139,15 +140,19 @@ foreach ($todos as $e) {
                 'items' => [
                     [
                         'label' => 'Notas (' . count($model->notas) . ')',
-                        'content' => $this->renderAjax('_tab_notas', ['model' => $model]),
+                        'content' => '<div class="tab-lazy-content" data-loaded="0"><div class="text-muted small">Cargando notas...</div></div>',
+                        'linkOptions' => ['data-lazy-url' => $tabNotasUrl],
+                        'active' => true,
                     ],
                     [
                         'label' => 'Pagos',
-                        'content' => $this->renderAjax('_tab_pagos', [
-                            'model' => $model,
-                            'totalPagado' => $totalPagado,
-                            'saldoPendiente' => $saldoPendiente,
-                        ]),
+                        'content' => '<div class="tab-lazy-content" data-loaded="0"><div class="text-muted small">Cargando pagos...</div></div>',
+                        'linkOptions' => ['data-lazy-url' => $tabPagosUrl],
+                    ],
+                    [
+                        'label' => 'Checklist (' . count($model->checklistItems) . ')',
+                        'content' => '<div class="tab-lazy-content" data-loaded="0"><div class="text-muted small">Cargando checklist...</div></div>',
+                        'linkOptions' => ['data-lazy-url' => $tabChecklistUrl],
                     ],
                 ],
                 'options' => ['id' => 'orden-tabs'],
@@ -250,3 +255,64 @@ foreach ($todos as $e) {
         </div>
     </div>
 </div>
+
+<?php
+$this->registerJs(<<<'JS'
+(function () {
+    const tabsRoot = document.getElementById('orden-tabs');
+    if (!tabsRoot) {
+        return;
+    }
+
+    const loadTab = async (triggerEl) => {
+        const lazyUrl = triggerEl.getAttribute('data-lazy-url');
+        if (!lazyUrl) {
+            return;
+        }
+
+        const targetSelector = triggerEl.getAttribute('data-bs-target') || triggerEl.getAttribute('href');
+        if (!targetSelector || !targetSelector.startsWith('#')) {
+            return;
+        }
+
+        const pane = document.querySelector(targetSelector);
+        if (!pane) {
+            return;
+        }
+
+        const container = pane.querySelector('.tab-lazy-content');
+        if (!container || container.dataset.loaded === '1') {
+            return;
+        }
+
+        try {
+            const response = await fetch(lazyUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            container.innerHTML = await response.text();
+            container.dataset.loaded = '1';
+        } catch (error) {
+            container.innerHTML = '<div class="alert alert-danger py-2 mb-0">No se pudo cargar el contenido del tab.</div>';
+            console.error('Error cargando tab:', error);
+        }
+    };
+
+    tabsRoot.querySelectorAll('[data-bs-toggle="tab"]').forEach((triggerEl) => {
+        triggerEl.addEventListener('shown.bs.tab', () => loadTab(triggerEl));
+    });
+
+    const firstActive = tabsRoot.querySelector('[data-bs-toggle="tab"].active');
+    if (firstActive) {
+        loadTab(firstActive);
+    }
+})();
+JS
+);
+?>

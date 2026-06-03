@@ -30,22 +30,24 @@ $this->registerCssFile('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css
 <!-- Wizard Steps -->
 <div class="wizard-steps mb-4">
     <div class="row text-center">
-        <div class="col-md-3 step-item active" data-step="1">
+        <div class="<?= $model->isNewRecord ? 'col-md-3' : 'col-md-4' ?> step-item active" data-step="1">
             <div class="step-circle mx-auto mb-2">1</div>
             <div class="step-label fw-bold">Cliente y Vehículo</div>
         </div>
-        <div class="col-md-3 step-item" data-step="2">
+        <div class="<?= $model->isNewRecord ? 'col-md-3' : 'col-md-4' ?> step-item" data-step="2">
             <div class="step-circle mx-auto mb-2">2</div>
             <div class="step-label fw-bold">Servicios</div>
         </div>
-        <div class="col-md-3 step-item" data-step="3">
+        <div class="<?= $model->isNewRecord ? 'col-md-3' : 'col-md-4' ?> step-item" data-step="3">
             <div class="step-circle mx-auto mb-2">3</div>
             <div class="step-label fw-bold">Técnicos</div>
         </div>
-        <div class="col-md-3 step-item" data-step="4">
-            <div class="step-circle mx-auto mb-2">4</div>
-            <div class="step-label fw-bold">Checklist</div>
-        </div>
+        <?php if ($model->isNewRecord): ?>
+            <div class="col-md-3 step-item" data-step="4">
+                <div class="step-circle mx-auto mb-2">4</div>
+                <div class="step-label fw-bold">Checklist</div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -213,6 +215,7 @@ $this->registerCssFile('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css
     </div>
 </div>
 
+<?php if ($model->isNewRecord): ?>
 <!-- Step 4: Checklist (solo al crear) -->
 <div class="wizard-step d-none" id="step-4">
     <div class="mt-3">
@@ -247,6 +250,7 @@ $this->registerCssFile('https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css
         </button>
     </div>
 </div>
+<?php endif; ?>
 
 <?php ActiveForm::end(); ?>
 
@@ -444,13 +448,15 @@ $this->registerJs(<<<'JS'
         });
     }
 
-    // Delegated remove
-    list.addEventListener('click', function(e){
-        if (e.target.closest('.remove-checklist-item')) {
-            const row = e.target.closest('.d-flex');
-            if (row) row.remove();
-        }
-    });
+    if (list) {
+        // Delegated remove
+        list.addEventListener('click', function(e){
+            if (e.target.closest('.remove-checklist-item')) {
+                const row = e.target.closest('.d-flex');
+                if (row) row.remove();
+            }
+        });
+    }
 })();
 JS
 );

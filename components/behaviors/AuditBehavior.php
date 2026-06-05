@@ -53,15 +53,35 @@ class AuditBehavior extends Behavior
     public ?string $modulo = null;
 
     /**
+     * Cache de atributos anteriores capturados antes del UPDATE.
+     * Necesario porque Yii2 actualiza _oldAttributes con los nuevos valores
+     * después de ejecutar el UPDATE en BD, antes de disparar EVENT_AFTER_UPDATE.
+     *
+     * @var array|null
+     */
+    private ?array $_cachedOldAttributes = null;
+
+    /**
      * {@inheritdoc}
      */
     public function events(): array
     {
         return [
-            BaseActiveRecord::EVENT_AFTER_INSERT  => 'onAfterInsert',
-            BaseActiveRecord::EVENT_AFTER_UPDATE  => 'onAfterUpdate',
-            BaseActiveRecord::EVENT_BEFORE_DELETE => 'onBeforeDelete',
+            BaseActiveRecord::EVENT_AFTER_INSERT   => 'onAfterInsert',
+            BaseActiveRecord::EVENT_BEFORE_UPDATE  => 'onBeforeUpdate',
+            BaseActiveRecord::EVENT_AFTER_UPDATE   => 'onAfterUpdate',
+            BaseActiveRecord::EVENT_BEFORE_DELETE  => 'onBeforeDelete',
         ];
+    }
+
+    /**
+     * Captura los atributos anteriores ANTES de que Yii2 los sobrescriba.
+     */
+    public function onBeforeUpdate(): void
+    {
+        /** @var ActiveRecord $owner */
+        $owner = $this->owner;
+        $this->_cachedOldAttributes = $owner->getOldAttributes() ?: null;
     }
 
     /**
@@ -84,15 +104,15 @@ class AuditBehavior extends Behavior
 
     /**
      * Registra la actualización de un registro existente.
+     * Usa los old attributes cacheados en onBeforeUpdate().
      */
     public function onAfterUpdate(): void
     {
         $startTime = microtime(true);
         try {
-            /** @var ActiveRecord $owner */
-            $owner = $this->owner;
-            $oldAttributes = $owner->getOldAttributes() ?: [];
-            $newAttributes = $owner->attributes;
+            $oldAttributes = $this->_cachedOldAttributes ?: [];
+            $newAttributes = $this->owner->attributes;
+            $this->_cachedOldAttributes = null; // Limpiar cache
 
             // Filtrar cambios automáticos en ambos arrays
             $oldAttributesFiltered = $this->filterExcludedAttributes($oldAttributes);

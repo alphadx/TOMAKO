@@ -18,6 +18,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\ContactForm;
 use app\components\services\AuthService;
+use app\models\AuditLog;
 
 /**
  * SiteController: acciones públicas y de autenticación.
@@ -139,6 +140,28 @@ class SiteController extends BaseController
             $rememberMe = !empty($post['rememberMe']);
 
             if ($authService->login($email, $password, $rememberMe)) {
+                // ── Auditoría: registrar LOGIN exitoso ──
+                try {
+                    $auditLogin = new AuditLog([
+                        'usuario_id'  => (int) Yii::$app->user->id,
+                        'accion'      => AuditLog::ACTION_LOGIN,
+                        'modulo'      => 'Auth',
+                        'entidad'     => 'User',
+                        'registro_id' => (int) Yii::$app->user->id,
+                        'datos_nuevos' => json_encode([
+                            'email'         => $email,
+                            'remember_me'   => $rememberMe,
+                            'ip'            => Yii::$app->request->userIP,
+                            'user_agent'    => Yii::$app->request->userAgent,
+                        ], JSON_UNESCAPED_UNICODE),
+                        'ip_address'  => Yii::$app->request->userIP,
+                        'duracion_ms' => 0,
+                    ]);
+                    $auditLogin->save(false);
+                } catch (\Throwable $e) {
+                    Yii::warning('No se pudo registrar auditoría de LOGIN: ' . $e->getMessage(), 'app.audit');
+                }
+
                 $returnUrl = Yii::$app->user->getReturnUrl();
                 if (is_string($returnUrl) && $returnUrl !== '') {
                     $returnHost = parse_url($returnUrl, PHP_URL_HOST);
@@ -180,6 +203,29 @@ class SiteController extends BaseController
      */
     public function actionLogout(): Response
     {
+        // ── Auditoría: registrar LOGOUT antes de cerrar sesión ──
+        try {
+            $userId = Yii::$app->user->isGuest ? null : (int) Yii::$app->user->id;
+            if ($userId !== null) {
+                $auditLogout = new AuditLog([
+                    'usuario_id'  => $userId,
+                    'accion'      => AuditLog::ACTION_LOGOUT,
+                    'modulo'      => 'Auth',
+                    'entidad'     => 'User',
+                    'registro_id' => $userId,
+                    'datos_previos' => json_encode([
+                        'email' => Yii::$app->user->identity->email ?? '',
+                        'ip'    => Yii::$app->request->userIP,
+                    ], JSON_UNESCAPED_UNICODE),
+                    'ip_address'  => Yii::$app->request->userIP,
+                    'duracion_ms' => 0,
+                ]);
+                $auditLogout->save(false);
+            }
+        } catch (\Throwable $e) {
+            Yii::warning('No se pudo registrar auditoría de LOGOUT: ' . $e->getMessage(), 'app.audit');
+        }
+
         $authService = new AuthService();
         $authService->logout();
         

@@ -1,0 +1,21 @@
+{
+  "name": "tomako",
+  "version": "1.0.0",
+  "description": "> **Tu auto necesita TOMAKO** 🍅  \r > *Taller Operativo de Mecánica Avanzada y Kinemática Optimizada*",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alphadx/TOMAKO.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/alphadx/TOMAKO/issues"
+  },
+  "homepage": "https://github.com/alphadx/TOMAKO#readme"
+}

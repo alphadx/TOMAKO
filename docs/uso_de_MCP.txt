@@ -1,0 +1,242 @@
+=============================================================================
+  GUÍA DE USO DEL SERVIDOR MCP PLAYWRIGHT - TOMAKO
+=============================================================================
+
+Descripción:
+  Se utilizó un servidor MCP (Model Context Protocol) basado en Playwright
+  para automatizar la captura de pantallas de todos los módulos del sistema
+  TOMAKO. El servidor corre como contenedor Docker con interfaz SSE
+  (Server-Sent Events).
+
+=============================================================================
+1. ARQUITECTURA DEL SERVIDOR MCP
+=============================================================================
+
+  ┌─────────────────────┐    SSE (HTTP)     ┌──────────────────────────┐
+  │  VS Code + Cline    │ ◄──────────────► │  Servidor MCP Playwright │
+  │  (Cliente MCP)      │   puerto 8089    │  (Contenedor Docker)     │
+  └─────────────────────┘                   └──────────────────────────┘
+         │                                          │
+         │  HTTP request/response                   │  Chromium headless
+         ▼                                          ▼
+  ┌─────────────────────┐                   ┌──────────────────────────┐
+  │  TOMAKO (Yii2)      │ ◄──────────────── │  Playwright Browser      │
+  │  localhost:8080      │                   │  dentro del contenedor   │
+  └─────────────────────┘                   └──────────────────────────┘
+
+  Nota: El navegador Playwright corre DENTRO de Docker, por lo que NO puede
+  acceder a localhost:8080 directamente. Se debe usar:
+    http://host.docker.internal:8080
+  como URL para alcanzar el servicio TOMAKO desde el contenedor.
+
+=============================================================================
+2. IDENTIFICACIÓN DEL SERVIDOR
+=============================================================================
+
+  - Nombre del contenedor: wizardly_meninsky (nombre auto-generado por Docker)
+  - Imagen: 012da75cc907
+  - Puerto SSE: 8089
+  - URL SSE: http://localhost:8089/sse
+  - Token de autenticación: Bearer 4at9q9kryrpjlqbevsma8rha5atutqjme2fvxnyjdridg4s5pb
+
+  Para identificar el contenedor activo:
+    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+
+=============================================================================
+3. ARCHIVOS DE CONFIGURACIÓN MCP
+=============================================================================
+
+  El servidor MCP debe estar configurado en DOS archivos:
+
+  a) Configuración global de VS Code (Copilot/Cline):
+     Ruta: C:\Users\<usuario>\AppData\Roaming\Code - Insiders\User\mcp.json
+     Contenido:
+     {
+       "servers": {
+         "playwright": {
+           "type": "sse",
+           "url": "http://localhost:8089/sse",
+           "headers": {
+             "Authorization": "Bearer <token>"
+           }
+         }
+       }
+     }
+
+  b) Configuración de Cline (extensión):
+     Ruta: C:\Users\<usuario>\AppData\Roaming\Code - Insiders\User\
+           globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json
+     Contenido:
+     {
+       "mcpServers": {
+         "docker": {
+           "url": "http://localhost:8089/sse",
+           "headers": {
+             "Authorization": "Bearer <token>"
+           },
+           "autoApprove": ["execute_sql", "list_tables"]
+         }
+       }
+     }
+
+     IMPORTANTE: El nombre del servidor en Cline es "docker" (no "playwright")
+     porque así fue registrado. Para usar las herramientas, se invocan con:
+       use_mcp_tool → server_name: "docker"
+
+  c) Configuración de workspace (opcional, para VS Code nativo):
+     Ruta: .vscode/mcp.json (dentro del proyecto TOMAKO)
+
+=============================================================================
+4. HERRAMIENTAS MCP DISPONIBLES (Playwright)
+=============================================================================
+
+  El servidor MCP Playwright expone las siguientes herramientas de navegador:
+
+  Herramienta            | Descripción
+  -----------------------|-------------------------------------------------
+  browser_navigate       | Navega a una URL. Carga la página completamente.
+  browser_screenshot     | Toma screenshot (viewport actual)
+  browser_take_screenshot| Toma screenshot con opciones (fullPage, type, path)
+  browser_snapshot       | Captura el árbol DOM como YAML estructurado
+  browser_click          | Hace clic en un elemento (por ref o selector)
+  browser_type           | Escribe texto en un campo enfocado
+  browser_fill_form      | Llena múltiples campos de formulario de una vez
+  browser_evaluate       | Ejecuta JavaScript en el contexto de la página
+  browser_select_option  | Selecciona una opción en un <select>
+  browser_hover          | Simula hover sobre un elemento
+  browser_press_key      | Presiona una tecla (Enter, Tab, Escape, etc.)
+  browser_wait           | Espera un tiempo específico o condición
+  browser_tab_list       | Lista las pestañas abiertas
+  browser_tab_new        | Abre una nueva pestaña
+  browser_tab_select     | Cambia a una pestaña específica
+  browser_tab_close      | Cierra la pestaña actual
+  browser_resize         | Cambia el tamaño del viewport
+  browser_close          | Cierra el navegador
+  browser_generate_playwright_test | Genera código de test Playwright
+
+=============================================================================
+5. PASOS EJECUTADOS PARA LAS CAPTURAS DE PANTALLA
+=============================================================================
+
+  Paso 1: Generar contraseña para admin@tomako.cl
+    docker exec tomako_app php yii reset-password/index 1
+    Resultado: Nueva contraseña generada (10 caracteres alfanuméricos)
+
+  Paso 2: Navegar a la página de login
+    browser_navigate(url="http://host.docker.internal:8080/login")
+    Nota: Usar host.docker.internal en vez de localhost
+
+  Paso 3: Llenar formulario de login
+    browser_fill_form → email: admin@tomako.cl, password: <generada>
+
+  Paso 4: Hacer clic en "Iniciar Sesión"
+    browser_click(ref="e38") → Puede dar timeout, pero la acción se ejecuta
+
+  Paso 5: Verificar login exitoso con browser_snapshot
+    El snapshot muestra el Dashboard con menú lateral y KPIs
+
+  Paso 6: Para cada módulo (17 en total):
+    6a. browser_navigate(url="http://host.docker.internal:8080/<ruta>")
+    6b. browser_take_screenshot(type="png", fullPage=true)
+        → Se guarda en .playwright-mcp/page-<timestamp>.png dentro del contenedor
+
+  Paso 7: Copiar capturas del contenedor al proyecto
+    docker cp <contenedor>:/home/node/.playwright-mcp/<archivo>.png \
+      "<ruta_local>/docs/VISTAS/img/<nombre>.png"
+
+=============================================================================
+6. MÓDULOS CAPTURADOS Y SUS RUTAS
+=============================================================================
+
+  #  | Módulo              | URL                          | Archivo destino
+  ---|---------------------|------------------------------|---------------------------
+  1  | Dashboard           | /dashboard                   | img/dashboard.png
+  2  | Clientes            | /cliente                     | img/clientes.png
+  3  | Vehículos           | /vehiculo                    | img/vehiculos.png
+  4  | Citas               | /cita                        | img/citas.png
+  5  | Órdenes de Servicio | /orden                       | img/ordenes.png
+  6  | Pagos               | /pago                        | img/pagos.png
+  7  | Notificaciones      | /notificaciones              | img/notificaciones.png
+  8  | Inventario          | /inventario                  | img/inventario.png
+  9  | Servicios           | /servicio                    | img/servicios.png
+  10 | Categorías          | /categoria                   | img/categorias.png
+  11 | Marcas y Modelos    | /marca-modelo/index          | img/marcas_modelos.png
+  12 | Técnicos            | /tecnico                     | img/tecnicos.png
+  13 | Especialidades      | /especialidad                | img/especialidades.png
+  14 | Manual de Usuario   | /manual                      | img/manual.png
+  15 | Configuración       | /admin                       | img/configuracion.png
+  16 | Roles               | /rol                         | img/roles.png
+  17 | Usuarios            | /usuario                     | img/usuarios.png
+  18 | Auditoría           | /audit-log/index             | img/auditoria.png
+  19 | Calculadora         | /calculadora                 | img/calculadora.png
+
+=============================================================================
+7. PROBLEMAS CONOCIDOS Y SOLUCIONES
+=============================================================================
+
+  Problema 1: "net::ERR_CONNECTION_REFUSED" al usar localhost
+  Solución: El navegador está dentro de Docker. Usar:
+    http://host.docker.internal:8080 en vez de http://localhost:8080
+
+  Problema 2: "ENOENT: no such file or directory" al guardar screenshot
+  Solución: No especificar ruta personalizada. El MCP guarda en su directorio
+    de trabajo: .playwright-mcp/page-<timestamp>.png (relativo a /home/node)
+    Copiar después con: docker cp <contenedor>:/home/node/.playwright-mcp/<file>
+
+  Problema 3: Timeout al hacer clic en botones de envío de formulario
+  Solución: Ignorar el timeout. El clic se ejecuta y la página navega.
+    Verificar con browser_snapshot que la navegación fue exitosa.
+
+  Problema 4: El servidor MCP no aparece como "Connected"
+  Solución: Verificar la configuración en cline_mcp_settings.json.
+    Reiniciar VS Code o usar Ctrl+Shift+P → "MCP: List Servers".
+    Asegurarse de que el contenedor Docker esté corriendo:
+      docker ps | findstr wizardly
+
+  Problema 5: PowerShell interpreta /dev/null como ruta de Windows
+  Solución: No usar 2>/dev/null en comandos docker exec desde PowerShell.
+    Ejecutar sin redirección de errores.
+
+  Problema 6: PowerShell no reconoce el carácter & para encadenar comandos
+  Solución: Usar punto y coma (;) en vez de & para encadenar comandos.
+    O ejecutar cada comando por separado.
+
+=============================================================================
+8. RESULTADO FINAL
+=============================================================================
+
+  Archivos generados:
+    docs/VISTAS/VISTAS.md          → Documento con todas las vistas y resúmenes
+    docs/VISTAS/img/*.png          → 19 capturas de pantalla (una por módulo)
+    docs/uso_de_MCP.txt            → Este archivo de documentación
+    README.md                      → Actualizado con enlace a VISTAS.md
+
+  Para visualizar las capturas:
+    Abrir docs/VISTAS/VISTAS.md en cualquier visor de Markdown (GitHub, VS Code).
+    Las imágenes están referenciadas como rutas relativas: img/<nombre>.png
+
+=============================================================================
+9. COMANDOS DE REFERENCIA RÁPIDA
+=============================================================================
+
+  # Verificar que Docker y TOMAKO están corriendo
+  docker ps
+
+  # Verificar que el servidor MCP está corriendo
+  docker ps | findstr wizardly
+
+  # Probar conexión al MCP SSE (desde cmd, no PowerShell)
+  curl.exe http://localhost:8089/sse -H "Authorization: Bearer <token>"
+
+  # Generar nueva contraseña para un usuario
+  docker exec tomako_app php yii reset-password/index <user_id>
+
+  # Listar archivos de capturas en el contenedor
+  docker exec <mcp_container> ls -la /home/node/.playwright-mcp/
+
+  # Copiar captura del contenedor al host
+  docker cp <mcp_container>:/home/node/.playwright-mcp/<file>.png <destino>
+
+=============================================================================
+Fin del documento
+=============================================================================

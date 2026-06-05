@@ -6,6 +6,7 @@
 [![Yii2 Framework](https://img.shields.io/badge/Yii-2.0-blue.svg)](https://www.yiiframework.com/)
 [![PHP](https://img.shields.io/badge/PHP-8.1+-purple.svg)](https://www.php.net/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Vistas](https://img.shields.io/badge/📸_Vistas-del_Sistema-orange.svg)](docs/VISTAS/VISTAS.md)
 
 ---
 

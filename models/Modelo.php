@@ -43,7 +43,7 @@ class Modelo extends ActiveRecord
             [['nombre'], 'trim'],
             [['marca_id', 'nombre'], 'unique', 'targetAttribute' => ['marca_id', 'nombre']],
             [['created_at', 'updated_at'], 'integer'],
-            [['marca_id'], 'exist', 'skipOnError' => true, 'targetClass' => Marca::class, 'targetAttribute' => 'marca_id'],
+            [['marca_id'], 'exist', 'skipOnError' => true, 'targetClass' => Marca::class, 'targetAttribute' => ['marca_id' => 'id']],
         ];
     }
 

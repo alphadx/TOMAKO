@@ -69,8 +69,8 @@ class RentabilidadService
         $fechaFin = date('Y-m-t', strtotime($fechaInicio)); // Último día del mes
 
         $ordenes = OrdenServicio::find()
-            ->where(['between', 'fecha_entrega', strtotime($fechaInicio), strtotime($fechaFin)])
-            ->andWhere(['in', 'estado', ['completada', 'entregada']])
+            ->where(['between', 'closed_at', strtotime($fechaInicio), strtotime($fechaFin)])
+            ->andWhere(['in', 'estado', ['entregada']])
             ->all();
 
         $resultados = [];
@@ -339,7 +339,7 @@ class RentabilidadService
     {
         // Obtener rango de fechas desde las órdenes
         $primeraOrden = OrdenServicio::find()
-            ->select('MIN(fecha_entrega) as fecha')
+            ->select('MIN(closed_at) as fecha')
             ->scalar();
         
         if (!$primeraOrden) {
